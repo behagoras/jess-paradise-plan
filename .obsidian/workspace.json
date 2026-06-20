@@ -1,0 +1,234 @@
+{
+  "main": {
+    "id": "c9f3803c7757600b",
+    "type": "split",
+    "children": [
+      {
+        "id": "a002e1e14533f6d6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "aed9ba719ae33fa6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/la-idea-de-negocio.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "la-idea-de-negocio"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "642aadc8152382e5",
+    "type": "split",
+    "children": [
+      {
+        "id": "0428c3126a727a8e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2885a2ef855333c8",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "8d2238fdd0e4b5ca",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "acc4cc58b8282fb6",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "e8f4cb0f882f4243",
+    "type": "split",
+    "children": [
+      {
+        "id": "ffa74093cfc681d4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bd8dbc68e8d8b073",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "docs/la-idea-de-negocio.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for la-idea-de-negocio"
+            }
+          },
+          {
+            "id": "7de5712300643554",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "docs/la-idea-de-negocio.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from la-idea-de-negocio"
+            }
+          },
+          {
+            "id": "79cf3c460ea2edec",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "59a93096c5a0872c",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "43d5fa831925de8f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "docs/la-idea-de-negocio.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of la-idea-de-negocio"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "aed9ba719ae33fa6",
+  "lastOpenFiles": [
+    "docs/flujo-app-ui.md",
+    "graphify-out/cache/ast/53ccc84568bdc690ed31724e4db8e06723b53415a0f5db5febc8f9bf4e7b2f51.json",
+    "graphify-out/cache/semantic/afeed555eb935a6d131c3b7a28a0c068f19c09a7e9bccc271abec3b4c3d0f7ca.json",
+    "graphify-out/cache/semantic/f22b5691e4e2d3a1c1dd5f49019cf426899a511c5575531e87d6b60e3eb72a82.json",
+    "graphify-out/cache/semantic/2215fb612b3608b67d29e0e4a362acda5f6c8ded944d5e5133e8075b41cc97a9.json",
+    "graphify-out/cache/semantic/1070f4829822a531d0b05ebf634e4d593e609f401a11fb6f35d3fb44c721aff4.json",
+    "graphify-out/cache/semantic/56c1e0cd70c4728ddbe2e3480ad0b1831d7161ddcb582bf1c88a627f801b80df.json",
+    "graphify-out/cache/semantic/c73eb7c252961a6eabebb22dd18e44dc2190779e447df353923ecdc889867357.json",
+    "graphify-out/cache/semantic/943c74f79bc3ea15866a27145d1cdb254b786986926873fdc69bff0c63c6ffcf.json",
+    "graphify-out/cache/semantic/c8c5a4cf68ad4a14b1ed3ede9a3ce904ed1f9d7a6e1fe430b967550a219caa65.json",
+    "graphify-out/cache/semantic/5fc5012daf78c70b72282eae95e8cb284ce41e31b72d9c5138fa9bdefbbeeb70.json",
+    "graphify-out/GRAPH_REPORT.md",
+    "project-base/proyecto-original-2019.md",
+    "docs/index.md",
+    "docs/la-idea-de-negocio.md",
+    "docs/wiki/proveedores-apis-e-inventario.md",
+    "docs/wiki/prototipo-drift.md",
+    "docs/wiki/panorama-competitivo.md",
+    "docs/wiki/modelo-de-negocio.md",
+    "docs/wiki/legal-y-fiscal-mexico.md",
+    "docs/wiki/glosario.md",
+    "docs/wiki/arquitectura-mvp.md",
+    "docs/wiki/acreditacion-y-host-agencies.md",
+    "project-base/Presentation.md",
+    "Presentation.md",
+    "project-base/what-can-make-traveling-easier.jpg",
+    "project-base/Image 6-20-26 at 1.10 PM.jpg",
+    "project-base/how-trips-are-planed.jpg",
+    "project-base/Features.jpg",
+    "project-base/Concept map. PLanning with paradise.jpg",
+    "project-base/PP/Web 1920 – 9.png",
+    "project-base/PP/Web 1920 – 8.png",
+    "project-base/PP/Web 1920 – 7.png",
+    "project-base/PP/Web 1920 – 6.png",
+    "project-base/PP/Web 1920 – 5.png",
+    "docs/wiki/riesgos-y-preguntas-abiertas.md",
+    "docs/wiki/verticales-y-economia-unitaria.md",
+    "docs/wiki/tesis-y-vision.md",
+    "docs/wiki/roadmap.md",
+    "docs/wiki/usuario-objetivo.md",
+    "docs/sources/2026-06-prompt-interfaz-drift.md",
+    "docs/sources/2026-06-prd-descubrimiento-viajes.md",
+    "docs/sources/2026-06-investigacion-tesis-negocio.md",
+    "docs/sources/2026-06-investigacion-competir-con-ota.md",
+    "docs/sources/2026-06-investigacion-apis-vuelos-experiencias.md"
+  ]
+}
