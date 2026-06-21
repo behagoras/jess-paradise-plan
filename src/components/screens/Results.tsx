@@ -43,7 +43,7 @@ export function Results({ planner }: { planner: PlannerApi }) {
         </div>
       </div>
 
-      <div className="grid gap-4 pt-2 lg:grid-cols-3">
+      <div className="grid gap-4 pt-2 lg:grid-cols-2 xl:grid-cols-3">
         {options.map((o, i) => {
           const b = DEST_BASE[o.key];
           const from = Math.round(b * (1 - disc));

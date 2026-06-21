@@ -1,8 +1,16 @@
 "use client";
 
 import { useRef } from "react";
+import {
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 import { usePlanner, fmt } from "@/lib/usePlanner";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { BrandRail } from "@/components/BrandRail";
 import { Landing } from "@/components/screens/Landing";
 import { Wizard } from "@/components/screens/Wizard";
 import { Generating } from "@/components/screens/Generating";
@@ -12,7 +20,9 @@ import { HandoffSheet } from "@/components/screens/HandoffSheet";
 
 export default function Home() {
   // The page-level scroll container. `usePlanner` resets its scrollTop on every
-  // screen change, replacing the old PhoneFrame inner scroll region.
+  // screen change, replacing the old PhoneFrame inner scroll region. On desktop
+  // this same element becomes the right-hand content stage (flex-1) so the
+  // scroll reset keeps working in both layouts with no change to usePlanner.
   const scrollRef = useRef<HTMLDivElement>(null);
   const planner = usePlanner(scrollRef);
   const { state } = planner;
@@ -42,17 +52,56 @@ export default function Home() {
       <DetailBar planner={planner} />
     ) : null;
 
-  return (
-    <div
-      ref={scrollRef}
-      data-scroll
-      className="relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-backdrop"
-    >
-      {/* Responsive app shell: full-bleed on mobile, centered column on desktop. */}
-      <div className="relative mx-auto min-h-[100dvh] w-full max-w-md bg-background text-foreground shadow-[0_0_60px_-30px_rgba(40,28,16,0.45)] sm:my-6 sm:min-h-0 sm:rounded-[28px] sm:max-w-lg lg:max-w-3xl">
-        <main className={bottomBar ? "pb-28" : ""}>{body}</main>
+  // Desktop content width adapts to the screen: forms read best narrow, while
+  // the results grid and side-by-side detail want the extra room.
+  const stageMax =
+    state.screen === "results"
+      ? "lg:max-w-5xl"
+      : state.screen === "detail" || state.screen === "handoff"
+        ? "lg:max-w-4xl"
+        : "lg:max-w-2xl";
 
-        {bottomBar}
+  return (
+    <div className="bg-backdrop lg:flex lg:h-[100dvh] lg:overflow-hidden">
+      {/* Persistent atmospheric brand rail — desktop only. */}
+      <BrandRail className="hidden lg:flex lg:w-[40%] lg:max-w-[600px] xl:w-[44%]" />
+
+      {/* Content stage / scroll container: full-bleed on mobile, a floating
+          card on tablet, the full-height right pane on desktop. */}
+      <div
+        ref={scrollRef}
+        data-scroll
+        className="relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-backdrop lg:flex-1 lg:bg-background"
+      >
+        <div
+          className={cn(
+            "relative mx-auto min-h-[100dvh] w-full max-w-md bg-background text-foreground shadow-[0_0_60px_-30px_rgba(40,28,16,0.45)]",
+            "sm:my-6 sm:min-h-0 sm:max-w-lg sm:rounded-[28px]",
+            "lg:my-0 lg:min-h-[100dvh] lg:rounded-none lg:shadow-none",
+            stageMax,
+          )}
+        >
+          <main className={bottomBar ? "pb-28" : ""}>{body}</main>
+
+          {bottomBar}
+        </div>
+      </div>
+
+      {/* Persistent auth control, pinned over the stage on desktop. */}
+      <div className="fixed right-6 top-6 z-40 hidden lg:block">
+        <SignedOut>
+          <SignInButton mode="modal">
+            <Button
+              variant="outline"
+              className="h-auto rounded-full border-[1.5px] border-line bg-card/90 px-4 py-2 text-xs font-bold text-ink-soft shadow-sm backdrop-blur"
+            >
+              Sign in
+            </Button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
       </div>
 
       {state.screen === "handoff" && <HandoffSheet planner={planner} />}
@@ -64,8 +113,8 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { state, nextStep } = planner;
   const isLast = state.step === 3;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(14px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px]">
-      <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-3.5 sm:max-w-lg sm:px-6 lg:max-w-3xl">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(14px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px] lg:rounded-none">
+      <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-3.5 sm:max-w-lg sm:px-6 lg:max-w-2xl">
         <div className="flex-1">
           {[1, 2, 3].map((n) => (
             <span
@@ -100,8 +149,8 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
 function DetailBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { computed, go } = planner;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(13px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px]">
-      <div className="mx-auto flex w-full max-w-md items-center gap-3.5 px-5 pt-3 sm:max-w-lg sm:px-6 lg:max-w-3xl">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(13px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px] lg:rounded-none">
+      <div className="mx-auto flex w-full max-w-md items-center gap-3.5 px-5 pt-3 sm:max-w-lg sm:px-6 lg:max-w-4xl">
         <div>
           <div className="text-[11px] font-bold text-ink-soft">Total from</div>
           <div className="font-display text-xl font-extrabold text-ink">

@@ -176,3 +176,36 @@
 [data-scroll] {
   scrollbar-width: none;
 }
+
+/* --- Desktop brand-rail scenery ------------------------------------- */
+/* Fractal-noise film grain so the rail gradient never reads as flat/AI. */
+.pp-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+/* A single plane drifting slowly across the rail, far in the distance. */
+@keyframes pp-drift {
+  0% {
+    transform: translate(-8vw, 6px) rotate(-4deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(42vw, -26px) rotate(-4deg);
+    opacity: 0;
+  }
+}
+.pp-drift {
+  animation: pp-drift 26s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-drift {
+    animation: none;
+    opacity: 0.6;
+  }
+}
