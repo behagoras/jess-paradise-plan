@@ -7,6 +7,10 @@
     "2xx-refactor": {
       "description": "Codebase refactor and restructuring prompts",
       "next": 202
+    },
+    "3xx-ui": {
+      "description": "UI, styling, responsive, and design-system prompts",
+      "next": 302
     }
   }
 }

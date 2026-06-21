@@ -2,31 +2,22 @@
 
 import { fmt, type PlannerApi } from "@/lib/usePlanner";
 import { ImageSlot } from "../ImageSlot";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
-const cardStyle: React.CSSProperties = {
-  border: "1px solid var(--line)",
-  borderRadius: 20,
-  padding: "16px 17px",
-  marginBottom: 13,
-  background: "var(--surface)",
-};
-const cardTitle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 9,
-  fontWeight: 800,
-  fontSize: 15,
-};
-const editBtn: React.CSSProperties = {
-  border: "1px solid var(--accent)",
-  background: "var(--surface)",
-  color: "var(--accent)",
-  fontWeight: 800,
-  fontSize: 12,
-  padding: "7px 13px",
-  borderRadius: 999,
-  cursor: "pointer",
-};
+const cardClass =
+  "mb-[13px] rounded-[20px] border border-line bg-card px-[17px] py-4";
+const cardTitle = "flex items-center gap-[9px] text-[15px] font-extrabold";
+
+function EditButton(props: React.ComponentProps<"button">) {
+  return (
+    <button
+      {...props}
+      className="cursor-pointer rounded-full border border-primary bg-card px-[13px] py-[7px] text-xs font-extrabold text-primary"
+    />
+  );
+}
 
 export function Detail({ planner }: { planner: PlannerApi }) {
   const { computed, state, setState, go } = planner;
@@ -34,299 +25,160 @@ export function Detail({ planner }: { planner: PlannerApi }) {
     computed;
 
   return (
-    <div data-screen-label="Package detail" style={{ padding: "0 0 150px" }}>
-      <div style={{ position: "relative", height: 230, background: dest.gradient }}>
-        <ImageSlot placeholder={dest.slotHint} />
+    <div data-screen-label="Package detail" className="pb-8">
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:px-7 lg:pt-6">
+        {/* Hero */}
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to top,rgba(20,12,6,.66),rgba(20,12,6,0) 58%)",
-            pointerEvents: "none",
-          }}
-        />
-        <button
-          onClick={() => go("results")}
-          style={{
-            position: "absolute",
-            top: 14,
-            left: 18,
-            width: 40,
-            height: 40,
-            borderRadius: "50%",
-            border: "none",
-            background: "rgba(255,255,255,.92)",
-            color: "var(--ink)",
-            fontSize: 19,
-            cursor: "pointer",
-          }}
+          className="relative h-[230px] lg:sticky lg:top-6 lg:h-[360px] lg:self-start lg:overflow-hidden lg:rounded-[24px]"
+          style={{ background: dest.gradient }}
         >
-          ←
-        </button>
-        <div
-          style={{
-            position: "absolute",
-            left: 20,
-            right: 20,
-            bottom: 18,
-            pointerEvents: "none",
-          }}
-        >
+          <ImageSlot placeholder={dest.slotHint} />
           <div
+            className="pointer-events-none absolute inset-0"
             style={{
-              color: "#fff",
-              fontFamily: "var(--fd)",
-              fontWeight: 800,
-              fontSize: 30,
-              textShadow: "0 2px 14px rgba(0,0,0,.4)",
+              background:
+                "linear-gradient(to top,rgba(20,12,6,.66),rgba(20,12,6,0) 58%)",
             }}
+          />
+          <button
+            onClick={() => go("results")}
+            aria-label="Back"
+            className="absolute left-[18px] top-3.5 h-10 w-10 cursor-pointer rounded-full border-none bg-white/90 text-[19px] text-ink"
           >
-            {dest.name}
-          </div>
-          <div
-            style={{
-              color: "rgba(255,255,255,.92)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              textShadow: "0 1px 7px rgba(0,0,0,.5)",
-            }}
-          >
-            {dest.region} · {dest.nights} nights
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: "18px 22px 0" }}>
-        <p
-          style={{
-            margin: "0 0 18px",
-            fontSize: 14.5,
-            lineHeight: 1.5,
-            color: "var(--ink)",
-          }}
-        >
-          {dest.blurb}
-        </p>
-
-        {/* Flight */}
-        <div style={cardStyle}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 13,
-            }}
-          >
-            <div style={cardTitle}>
-              <span style={{ color: "var(--accent)", fontSize: 17 }}>✈</span>
-              {air.name}
+            ←
+          </button>
+          <div className="pointer-events-none absolute inset-x-5 bottom-[18px]">
+            <div className="font-display text-[30px] font-extrabold text-white [text-shadow:0_2px_14px_rgba(0,0,0,.4)]">
+              {dest.name}
             </div>
-            <button
-              onClick={() =>
-                setState((s) => ({ ...s, airlineIdx: (s.airlineIdx + 1) % 3 }))
-              }
-              style={editBtn}
-            >
-              Edit
-            </button>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "var(--fd)", fontWeight: 800, fontSize: 16 }}>
-                  {dest.from}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Jul 2</div>
-              </div>
-              <div
-                style={{ color: "var(--ink-soft)", fontSize: 12, letterSpacing: 1 }}
-              >
-                •—✈—•
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "var(--fd)", fontWeight: 800, fontSize: 16 }}>
-                  {dest.to}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Jul 5</div>
-              </div>
+            <div className="text-[13.5px] font-semibold text-white/90 [text-shadow:0_1px_7px_rgba(0,0,0,.5)]">
+              {dest.region} · {dest.nights} nights
             </div>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>{fmt(air.price)}</div>
           </div>
         </div>
 
-        {/* Hotel */}
-        <div style={cardStyle}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 9,
-            }}
-          >
-            <div style={cardTitle}>
-              <span style={{ color: "var(--accent)", fontSize: 17 }}>⌂</span>
-              {hot.name}
-            </div>
-            <button
-              onClick={() =>
-                setState((s) => ({ ...s, hotelIdx: (s.hotelIdx + 1) % 3 }))
-              }
-              style={editBtn}
-            >
-              Edit
-            </button>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-              {hot.room} · {dest.nights} nights
-            </div>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>{fmt(hot.price)}</div>
-          </div>
-        </div>
+        <div className="px-5 pt-[18px] sm:px-7 lg:px-0 lg:pt-0">
+          <p className="mb-[18px] text-[14.5px] leading-[1.5] text-ink">
+            {dest.blurb}
+          </p>
 
-        {/* Activity */}
-        {state.activityOn ? (
-          <>
-            <div style={cardStyle}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 9,
-                }}
-              >
-                <div style={cardTitle}>
-                  <span style={{ color: "var(--accent)", fontSize: 17 }}>♪</span>
-                  {dest.activity}
-                </div>
-                <button style={editBtn}>Swap</button>
+          {/* Flight */}
+          <div className={cardClass}>
+            <div className="mb-[13px] flex items-center justify-between">
+              <div className={cardTitle}>
+                <span className="text-[17px] text-primary">✈</span>
+                {air.name}
               </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
+              <EditButton
+                onClick={() =>
+                  setState((s) => ({ ...s, airlineIdx: (s.airlineIdx + 1) % 3 }))
+                }
               >
-                <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-                  {dest.actDesc}
-                </div>
-                <div style={{ fontWeight: 800, fontSize: 15 }}>{fmt(actPrice)}</div>
-              </div>
+                Edit
+              </EditButton>
             </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-[11px]">
+                <div className="text-center">
+                  <div className="font-display text-base font-extrabold">
+                    {dest.from}
+                  </div>
+                  <div className="text-[11px] text-ink-soft">Jul 2</div>
+                </div>
+                <div className="text-xs tracking-[1px] text-ink-soft">•—✈—•</div>
+                <div className="text-center">
+                  <div className="font-display text-base font-extrabold">
+                    {dest.to}
+                  </div>
+                  <div className="text-[11px] text-ink-soft">Jul 5</div>
+                </div>
+              </div>
+              <div className="text-[15px] font-extrabold">{fmt(air.price)}</div>
+            </div>
+          </div>
+
+          {/* Hotel */}
+          <div className={cardClass}>
+            <div className="mb-[9px] flex items-center justify-between">
+              <div className={cardTitle}>
+                <span className="text-[17px] text-primary">⌂</span>
+                {hot.name}
+              </div>
+              <EditButton
+                onClick={() =>
+                  setState((s) => ({ ...s, hotelIdx: (s.hotelIdx + 1) % 3 }))
+                }
+              >
+                Edit
+              </EditButton>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-[13px] text-ink-soft">
+                {hot.room} · {dest.nights} nights
+              </div>
+              <div className="text-[15px] font-extrabold">{fmt(hot.price)}</div>
+            </div>
+          </div>
+
+          {/* Activity */}
+          {state.activityOn ? (
+            <>
+              <div className={cardClass}>
+                <div className="mb-[9px] flex items-center justify-between">
+                  <div className={cardTitle}>
+                    <span className="text-[17px] text-primary">♪</span>
+                    {dest.activity}
+                  </div>
+                  <EditButton>Swap</EditButton>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-[13px] text-ink-soft">{dest.actDesc}</div>
+                  <div className="text-[15px] font-extrabold">{fmt(actPrice)}</div>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  setState((s) => ({ ...s, activityOn: !s.activityOn }))
+                }
+                className="mx-auto -mt-1 mb-4 block cursor-pointer text-[12.5px] font-semibold text-ink-soft underline"
+              >
+                Remove activity
+              </button>
+            </>
+          ) : (
             <button
               onClick={() => setState((s) => ({ ...s, activityOn: !s.activityOn }))}
-              style={{
-                display: "block",
-                margin: "-4px auto 16px",
-                border: "none",
-                background: "transparent",
-                color: "var(--ink-soft)",
-                fontWeight: 600,
-                fontSize: 12.5,
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
+              className="mb-[13px] w-full cursor-pointer rounded-[20px] border-[1.5px] border-dashed border-line bg-transparent p-[15px] text-sm font-bold text-ink-soft"
             >
-              Remove activity
+              + Add an activity
             </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setState((s) => ({ ...s, activityOn: !s.activityOn }))}
-            style={{
-              width: "100%",
-              border: "1.5px dashed var(--line)",
-              background: "transparent",
-              color: "var(--ink-soft)",
-              fontWeight: 700,
-              fontSize: 14,
-              padding: 15,
-              borderRadius: 20,
-              cursor: "pointer",
-              marginBottom: 13,
-            }}
-          >
-            + Add an activity
-          </button>
-        )}
+          )}
 
-        {/* Breakdown */}
-        <div
-          style={{
-            background: "var(--surface2)",
-            borderRadius: 20,
-            padding: "17px 18px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: ".06em",
-              textTransform: "uppercase",
-              color: "var(--ink-soft)",
-              marginBottom: 13,
-            }}
-          >
-            Price breakdown · {travelersLabel}
-          </div>
-          {breakdown.map((b) => (
-            <div
-              key={b.k}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "6px 0",
-                fontSize: 14,
-              }}
-            >
-              <span style={{ color: "var(--ink-soft)" }}>{b.k}</span>
-              <span style={{ fontWeight: 700, color: b.color }}>{b.v}</span>
+          {/* Breakdown */}
+          <div className="rounded-[20px] bg-surface2 px-[18px] py-[17px]">
+            <div className="mb-[13px] text-xs font-extrabold uppercase tracking-[.06em] text-ink-soft">
+              Price breakdown · {travelersLabel}
             </div>
-          ))}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-              paddingTop: 12,
-              marginTop: 8,
-              borderTop: "1.5px solid var(--line)",
-            }}
-          >
-            <span style={{ fontFamily: "var(--fd)", fontWeight: 800, fontSize: 17 }}>
-              Total
-            </span>
-            <div style={{ textAlign: "right" }}>
-              <div
-                style={{
-                  fontFamily: "var(--fd)",
-                  fontWeight: 800,
-                  fontSize: 24,
-                  color: "var(--accent)",
-                }}
-              >
-                {fmt(grand)}
+            {breakdown.map((b) => (
+              <div key={b.k} className="flex justify-between py-1.5 text-sm">
+                <span className="text-ink-soft">{b.k}</span>
+                <span className="font-bold" style={{ color: b.color }}>
+                  {b.v}
+                </span>
               </div>
-              <div style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>
-                {fmt(perPerson)} per person
+            ))}
+            <Separator className="mt-2 bg-line" />
+            <div className="flex items-baseline justify-between pt-3">
+              <span className="font-display text-[17px] font-extrabold">
+                Total
+              </span>
+              <div className="text-right">
+                <div className="font-display text-2xl font-extrabold text-primary">
+                  {fmt(grand)}
+                </div>
+                <div className="text-[11.5px] text-ink-soft">
+                  {fmt(perPerson)} per person
+                </div>
               </div>
             </div>
           </div>

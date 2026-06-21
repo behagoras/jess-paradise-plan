@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { usePlanner, fmt } from "@/lib/usePlanner";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { Button } from "@/components/ui/button";
 import { Landing } from "@/components/screens/Landing";
 import { Wizard } from "@/components/screens/Wizard";
 import { Generating } from "@/components/screens/Generating";
@@ -11,6 +11,8 @@ import { Detail } from "@/components/screens/Detail";
 import { HandoffSheet } from "@/components/screens/HandoffSheet";
 
 export default function Home() {
+  // The page-level scroll container. `usePlanner` resets its scrollTop on every
+  // screen change, replacing the old PhoneFrame inner scroll region.
   const scrollRef = useRef<HTMLDivElement>(null);
   const planner = usePlanner(scrollRef);
   const { state } = planner;
@@ -33,34 +35,28 @@ export default function Home() {
     }
   })();
 
+  const bottomBar =
+    state.screen === "wizard" ? (
+      <WizardBar planner={planner} />
+    ) : state.screen === "detail" ? (
+      <DetailBar planner={planner} />
+    ) : null;
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        width: "100%",
-        background: "var(--backdrop)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        gap: 18,
-        padding: "30px 20px 44px",
-      }}
+    <div
+      ref={scrollRef}
+      data-scroll
+      className="relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-backdrop"
     >
-      <PhoneFrame
-        scrollRef={scrollRef}
-        overlay={state.screen === "handoff" ? <HandoffSheet planner={planner} /> : null}
-        bottomBar={
-          state.screen === "wizard" ? (
-            <WizardBar planner={planner} />
-          ) : state.screen === "detail" ? (
-            <DetailBar planner={planner} />
-          ) : null
-        }
-      >
-        {body}
-      </PhoneFrame>
-    </main>
+      {/* Responsive app shell: full-bleed on mobile, centered column on desktop. */}
+      <div className="relative mx-auto min-h-[100dvh] w-full max-w-md bg-background text-foreground shadow-[0_0_60px_-30px_rgba(40,28,16,0.45)] sm:my-6 sm:min-h-0 sm:rounded-[28px] sm:max-w-lg lg:max-w-3xl">
+        <main className={bottomBar ? "pb-28" : ""}>{body}</main>
+
+        {bottomBar}
+      </div>
+
+      {state.screen === "handoff" && <HandoffSheet planner={planner} />}
+    </div>
   );
 }
 
@@ -68,59 +64,35 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { state, nextStep } = planner;
   const isLast = state.step === 3;
   return (
-    <div
-      style={{
-        flex: "0 0 auto",
-        padding: "14px 22px calc(14px + env(safe-area-inset-bottom))",
-        background: "var(--surface)",
-        borderTop: "1px solid var(--line)",
-        display: "flex",
-        gap: 12,
-        alignItems: "center",
-      }}
-    >
-      <div style={{ flex: 1 }}>
-        {[1, 2, 3].map((n) => (
-          <span
-            key={n}
-            style={{
-              display: "inline-block",
-              width: n === state.step ? 22 : 8,
-              height: 8,
-              borderRadius: 5,
-              marginRight: 6,
-              background: n <= state.step ? "var(--accent)" : "var(--line)",
-              transition: "all .25s",
-            }}
-          />
-        ))}
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(14px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px]">
+      <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-3.5 sm:max-w-lg sm:px-6 lg:max-w-3xl">
+        <div className="flex-1">
+          {[1, 2, 3].map((n) => (
+            <span
+              key={n}
+              className="mr-1.5 inline-block h-2 rounded-[5px] transition-all duration-300"
+              style={{
+                width: n === state.step ? 22 : 8,
+                background: n <= state.step ? "var(--accent)" : "var(--line)",
+              }}
+            />
+          ))}
+        </div>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className={
+            "font-display h-auto gap-2 rounded-[15px] px-6 py-[15px] text-base font-extrabold " +
+            (isLast
+              ? "bg-accent2 text-accent2-ink shadow-[0_10px_22px_-10px_var(--accent2)] hover:bg-accent2/90"
+              : "")
+          }
+        >
+          {isLast && <span className="text-[19px] font-black">⌕</span>}
+          {isLast ? "Surprise me" : "Continue"}
+          {!isLast && <span className="text-[17px]">→</span>}
+        </Button>
       </div>
-      <button
-        onClick={nextStep}
-        style={{
-          border: "none",
-          fontFamily: "var(--fd)",
-          fontWeight: 800,
-          fontSize: 16,
-          padding: "15px 24px",
-          borderRadius: 15,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          ...(isLast
-            ? {
-                background: "var(--accent2)",
-                color: "var(--accent2-ink)",
-                boxShadow: "0 10px 22px -10px var(--accent2)",
-              }
-            : { background: "var(--accent)", color: "var(--accent-ink)" }),
-        }}
-      >
-        {isLast && <span style={{ fontSize: 19, fontWeight: 900 }}>⌕</span>}
-        {isLast ? "Surprise me" : "Continue"}
-        {!isLast && <span style={{ fontSize: 17 }}>→</span>}
-      </button>
     </div>
   );
 }
@@ -128,49 +100,21 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
 function DetailBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { computed, go } = planner;
   return (
-    <div
-      style={{
-        flex: "0 0 auto",
-        padding: "13px 22px calc(13px + env(safe-area-inset-bottom))",
-        background: "var(--surface)",
-        borderTop: "1px solid var(--line)",
-        display: "flex",
-        gap: 14,
-        alignItems: "center",
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 700 }}>
-          Total from
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(13px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px]">
+      <div className="mx-auto flex w-full max-w-md items-center gap-3.5 px-5 pt-3 sm:max-w-lg sm:px-6 lg:max-w-3xl">
+        <div>
+          <div className="text-[11px] font-bold text-ink-soft">Total from</div>
+          <div className="font-display text-xl font-extrabold text-ink">
+            {fmt(computed.grand)}
+          </div>
         </div>
-        <div
-          style={{
-            fontFamily: "var(--fd)",
-            fontWeight: 800,
-            fontSize: 20,
-            color: "var(--ink)",
-          }}
+        <Button
+          onClick={() => go("handoff")}
+          className="font-display h-auto flex-1 rounded-[15px] py-4 text-base font-extrabold"
         >
-          {fmt(computed.grand)}
-        </div>
+          Reserve with {computed.provider}
+        </Button>
       </div>
-      <button
-        onClick={() => go("handoff")}
-        style={{
-          flex: 1,
-          border: "none",
-          background: "var(--accent)",
-          color: "var(--accent-ink)",
-          fontFamily: "var(--fd)",
-          fontWeight: 800,
-          fontSize: 16,
-          padding: 16,
-          borderRadius: 15,
-          cursor: "pointer",
-        }}
-      >
-        Reserve with {computed.provider}
-      </button>
     </div>
   );
 }

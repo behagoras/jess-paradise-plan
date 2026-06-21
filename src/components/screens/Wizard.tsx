@@ -9,8 +9,15 @@ import {
   GENERAL,
   WEATHER,
 } from "@/lib/data";
-import { chip, fieldLabel } from "@/lib/theme";
+import { Chip } from "@/components/ui/chip";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { fmt, type PlannerApi } from "@/lib/usePlanner";
+import { cn } from "@/lib/utils";
+
+const fieldLabel =
+  "mb-[11px] text-xs font-extrabold uppercase tracking-[.06em] text-ink-soft";
 
 function ChipRow({
   items,
@@ -24,110 +31,73 @@ function ChipRow({
   accent2?: boolean;
 }) {
   return (
-    <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+    <div className="flex flex-wrap gap-[9px]">
       {items.map((v) => (
-        <button key={v} onClick={() => onPick(v)} style={chip(isActive(v), accent2)}>
+        <Chip
+          key={v}
+          active={isActive(v)}
+          accent2={accent2}
+          onClick={() => onPick(v)}
+        >
           {v}
-        </button>
+        </Chip>
       ))}
     </div>
   );
 }
 
-const h2: React.CSSProperties = {
-  fontFamily: "var(--fd)",
-  fontWeight: 800,
-  fontSize: 25,
-  margin: "0 0 3px",
-  letterSpacing: "-.01em",
-};
-const sub: React.CSSProperties = {
-  color: "var(--ink-soft)",
-  fontSize: 14,
-  margin: "0 0 22px",
-};
+const h2 =
+  "font-display m-0 mb-[3px] text-[25px] font-extrabold tracking-[-.01em]";
+const sub = "m-0 mb-[22px] text-sm text-ink-soft";
 
 export function Wizard({ planner }: { planner: PlannerApi }) {
   const { state, setState, toggleArr, goStep, prevStep } = planner;
 
-  const tabStyle = (n: number): React.CSSProperties => {
+  const tabClass = (n: number) => {
     const active = n === state.step;
     const done = n < state.step;
-    return {
-      flex: 1,
-      padding: "9px 4px",
-      borderRadius: 11,
-      cursor: "pointer",
-      fontFamily: "var(--fb)",
-      fontWeight: 800,
-      fontSize: 12.5,
-      letterSpacing: ".02em",
-      transition: "all .2s",
-      border: `1.5px solid ${active || done ? "var(--accent)" : "var(--line)"}`,
-      background: active ? "var(--accent)" : "var(--surface)",
-      color: active ? "var(--accent-ink)" : done ? "var(--accent)" : "var(--ink-soft)",
-    };
+    return cn(
+      "flex-1 cursor-pointer rounded-[11px] border-[1.5px] px-1 py-[9px] text-[12.5px] font-extrabold tracking-[.02em] transition-all duration-200",
+      active
+        ? "border-primary bg-primary text-primary-foreground"
+        : done
+          ? "border-primary bg-card text-primary"
+          : "border-line bg-card text-ink-soft",
+    );
   };
 
   return (
-    <div data-screen-label="Preferences" style={{ padding: "6px 22px 132px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "10px 0 14px",
-        }}
-      >
+    <div data-screen-label="Preferences" className="px-5 pt-1.5 pb-8 sm:px-7">
+      <div className="flex items-center gap-3 py-[10px_0] pb-3.5 pt-2.5">
         <button
           onClick={prevStep}
-          style={{
-            flex: "0 0 38px",
-            height: 38,
-            borderRadius: 11,
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-            color: "var(--ink)",
-            fontSize: 18,
-            cursor: "pointer",
-          }}
+          aria-label="Back"
+          className="h-[38px] flex-none cursor-pointer rounded-[11px] border border-line bg-card px-3 text-lg text-ink"
         >
           ←
         </button>
         {[1, 2, 3].map((n) => (
-          <button key={n} onClick={() => goStep(n)} style={tabStyle(n)}>
+          <button key={n} onClick={() => goStep(n)} className={tabClass(n)}>
             Step {n}
           </button>
         ))}
       </div>
-      <div
-        style={{
-          height: 6,
-          borderRadius: 6,
-          background: "var(--line)",
-          overflow: "hidden",
-          marginBottom: 20,
-        }}
-      >
+
+      <div className="mb-5 h-1.5 overflow-hidden rounded-md bg-line">
         <div
-          style={{
-            height: "100%",
-            borderRadius: 6,
-            background: "var(--accent)",
-            transition: "width .3s",
-            width: Math.round((state.step / 3) * 100) + "%",
-          }}
+          className="h-full rounded-md bg-primary transition-all duration-300"
+          style={{ width: Math.round((state.step / 3) * 100) + "%" }}
         />
       </div>
 
       {/* STEP 1 */}
       {state.step === 1 && (
-        <div style={{ animation: "pp-up .35s ease both" }}>
-          <h2 style={h2}>Your trip</h2>
-          <p style={sub}>The basics. Flexibility unlocks the best prices.</p>
+        <div className="animate-pp-up">
+          <h2 className={h2}>Your trip</h2>
+          <p className={sub}>The basics. Flexibility unlocks the best prices.</p>
 
-          <div style={fieldLabel}>Departure point</div>
-          <div style={{ marginBottom: 24 }}>
+          <div className={fieldLabel}>Departure point</div>
+          <div className="mb-6">
             <ChipRow
               items={CITIES}
               isActive={(v) => state.departure === v}
@@ -135,8 +105,8 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             />
           </div>
 
-          <div style={fieldLabel}>When</div>
-          <div style={{ marginBottom: 24 }}>
+          <div className={fieldLabel}>When</div>
+          <div className="mb-6">
             <ChipRow
               items={WHEN}
               isActive={(v) => state.when === v}
@@ -144,114 +114,64 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             />
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 11,
-            }}
-          >
-            <span style={{ ...fieldLabel, marginBottom: 0 }}>Travelers</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div className="mb-[11px] flex items-center justify-between">
+            <span className={cn(fieldLabel, "mb-0")}>Travelers</span>
+            <div className="flex items-center gap-4">
               <button
+                aria-label="−"
                 onClick={() =>
-                  setState((s) => ({ ...s, travelers: Math.max(1, s.travelers - 1) }))
+                  setState((s) => ({
+                    ...s,
+                    travelers: Math.max(1, s.travelers - 1),
+                  }))
                 }
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  border: "1.5px solid var(--line)",
-                  background: "var(--surface)",
-                  color: "var(--ink)",
-                  fontSize: 20,
-                  cursor: "pointer",
-                  lineHeight: 1,
-                }}
+                className="h-[38px] w-[38px] cursor-pointer rounded-full border-[1.5px] border-line bg-card text-xl leading-none text-ink"
               >
                 −
               </button>
-              <span
-                style={{
-                  fontFamily: "var(--fd)",
-                  fontWeight: 800,
-                  fontSize: 22,
-                  minWidth: 24,
-                  textAlign: "center",
-                }}
-              >
+              <span className="font-display min-w-6 text-center text-[22px] font-extrabold">
                 {state.travelers}
               </span>
               <button
+                aria-label="+"
                 onClick={() =>
-                  setState((s) => ({ ...s, travelers: Math.min(9, s.travelers + 1) }))
+                  setState((s) => ({
+                    ...s,
+                    travelers: Math.min(9, s.travelers + 1),
+                  }))
                 }
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  border: "1.5px solid var(--accent)",
-                  background: "var(--accent)",
-                  color: "var(--accent-ink)",
-                  fontSize: 20,
-                  cursor: "pointer",
-                  lineHeight: 1,
-                }}
+                className="h-[38px] w-[38px] cursor-pointer rounded-full border-[1.5px] border-primary bg-primary text-xl leading-none text-primary-foreground"
               >
                 +
               </button>
             </div>
           </div>
-          <div style={{ height: 1, background: "var(--line)", margin: "18px 0 22px" }} />
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-              marginBottom: 14,
-            }}
-          >
-            <span style={{ ...fieldLabel, marginBottom: 0 }}>Budget per person</span>
-            <span
-              style={{
-                fontFamily: "var(--fd)",
-                fontWeight: 800,
-                fontSize: 22,
-                color: "var(--accent)",
-              }}
-            >
+          <Separator className="my-[18px_0] mb-[22px] mt-[18px] bg-line" />
+
+          <div className="mb-3.5 flex items-baseline justify-between">
+            <span className={cn(fieldLabel, "mb-0")}>Budget per person</span>
+            <span className="font-display text-[22px] font-extrabold text-primary">
               {fmt(state.budget)}
             </span>
           </div>
-          <input
-            type="range"
+          <Slider
             min={400}
             max={6000}
             step={100}
-            value={state.budget}
-            onChange={(e) =>
-              setState((s) => ({ ...s, budget: +e.target.value }))
+            value={[state.budget]}
+            onValueChange={(v) =>
+              setState((s) => ({ ...s, budget: v[0] ?? s.budget }))
             }
-            style={{ width: "100%", height: 30, cursor: "pointer" }}
+            className="py-2.5"
           />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 12,
-              color: "var(--ink-soft)",
-              fontWeight: 600,
-              margin: "-2px 0 26px",
-            }}
-          >
+          <div className="mb-[26px] mt-1 flex justify-between text-xs font-semibold text-ink-soft">
             <span>$400</span>
             <span>$6,000+</span>
           </div>
 
-          <div style={fieldLabel}>Include</div>
-          <div style={{ marginBottom: 24 }}>
+          <div className={fieldLabel}>Include</div>
+          <div className="mb-6">
             <ChipRow
               items={PACKAGES}
               isActive={(v) => state.packages.includes(v)}
@@ -259,8 +179,8 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             />
           </div>
 
-          <div style={fieldLabel}>Vacation type</div>
-          <div style={{ marginBottom: 24 }}>
+          <div className={fieldLabel}>Vacation type</div>
+          <div className="mb-6">
             <ChipRow
               items={VACATION}
               isActive={(v) => state.vacation.includes(v)}
@@ -268,8 +188,8 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             />
           </div>
 
-          <div style={fieldLabel}>Who&apos;s traveling</div>
-          <div style={{ marginBottom: 24 }}>
+          <div className={fieldLabel}>Who&apos;s traveling</div>
+          <div className="mb-6">
             <ChipRow
               items={TRAVELER_TYPES}
               isActive={(v) => state.travelerTypes.includes(v)}
@@ -277,41 +197,21 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             />
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 11,
-            }}
-          >
-            <span style={{ ...fieldLabel, marginBottom: 0 }}>Activity intensity</span>
-            <span style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 700 }}>
-              low → high
-            </span>
+          <div className="mb-[11px] flex items-center justify-between">
+            <span className={cn(fieldLabel, "mb-0")}>Activity intensity</span>
+            <span className="text-xs font-bold text-ink-soft">low → high</span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 onClick={() => setState((s) => ({ ...s, intensity: n }))}
-                style={{
-                  flex: 1,
-                  padding: "13px 0",
-                  borderRadius: 12,
-                  border: `1.5px solid ${
-                    n === state.intensity ? "var(--accent)" : "var(--line)"
-                  }`,
-                  background:
-                    n === state.intensity ? "var(--accent)" : "var(--surface)",
-                  color:
-                    n === state.intensity ? "var(--accent-ink)" : "var(--ink)",
-                  fontFamily: "var(--fd)",
-                  fontWeight: 800,
-                  fontSize: 16,
-                  cursor: "pointer",
-                  transition: "all .15s",
-                }}
+                className={cn(
+                  "font-display flex-1 cursor-pointer rounded-xl border-[1.5px] py-[13px] text-base font-extrabold transition-all duration-150",
+                  n === state.intensity
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-line bg-card text-ink",
+                )}
               >
                 {n}
               </button>
@@ -322,23 +222,14 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
 
       {/* STEP 2 */}
       {state.step === 2 && (
-        <div style={{ animation: "pp-up .35s ease both" }}>
-          <h2 style={h2}>Preferences</h2>
-          <p style={sub}>The feeling you&apos;re after. Select all that apply.</p>
+        <div className="animate-pp-up">
+          <h2 className={h2}>Preferences</h2>
+          <p className={sub}>The feeling you&apos;re after. Select all that apply.</p>
 
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: ".08em",
-              textTransform: "uppercase",
-              color: "var(--ink)",
-              marginBottom: 12,
-            }}
-          >
+          <div className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-ink">
             General
           </div>
-          <div style={{ marginBottom: 26 }}>
+          <div className="mb-[26px]">
             <ChipRow
               items={GENERAL}
               isActive={(v) => state.general.includes(v)}
@@ -346,16 +237,7 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             />
           </div>
 
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: ".08em",
-              textTransform: "uppercase",
-              color: "var(--ink)",
-              marginBottom: 12,
-            }}
-          >
+          <div className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-ink">
             Weather
           </div>
           <ChipRow
@@ -395,55 +277,27 @@ function Step3Summary({ planner }: { planner: PlannerApi }) {
   ];
 
   return (
-    <div style={{ animation: "pp-up .35s ease both" }}>
-      <h2 style={h2}>Selections summary</h2>
-      <p style={sub}>Review, then let us surprise you.</p>
+    <div className="animate-pp-up">
+      <h2 className={h2}>Selections summary</h2>
+      <p className={sub}>Review, then let us surprise you.</p>
 
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--line)",
-          borderRadius: 20,
-          padding: "6px 19px 10px",
-        }}
-      >
+      <div className="rounded-[20px] border border-line bg-card px-[19px] pb-2.5 pt-1.5">
         {rows.map((r, i) => (
           <div
             key={r.k}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 16,
-              padding: "11px 0",
-              borderBottom:
-                i === rows.length - 1 ? "none" : "1px solid var(--line)",
-            }}
+            className={cn(
+              "flex justify-between gap-4 py-[11px]",
+              i !== rows.length - 1 && "border-b border-line",
+            )}
           >
-            <span
-              style={{
-                color: "var(--ink-soft)",
-                fontWeight: 700,
-                fontSize: 13.5,
-                whiteSpace: "nowrap",
-              }}
-            >
+            <span className="whitespace-nowrap text-[13.5px] font-bold text-ink-soft">
               {r.k}
             </span>
-            <span style={{ fontWeight: 700, textAlign: "right", fontSize: 14 }}>
-              {r.v}
-            </span>
+            <span className="text-right text-sm font-bold">{r.v}</span>
           </div>
         ))}
       </div>
-      <p
-        style={{
-          textAlign: "center",
-          color: "var(--ink-soft)",
-          fontSize: 12.5,
-          margin: "16px 6px 0",
-          lineHeight: 1.5,
-        }}
-      >
+      <p className="mx-1.5 mt-4 text-center text-[12.5px] leading-[1.5] text-ink-soft">
         Tap any step above to edit. We never charge you here. You book on the
         provider&apos;s site.
       </p>
