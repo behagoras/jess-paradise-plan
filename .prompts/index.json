@@ -1,0 +1,8 @@
+{
+  "categories": {
+    "1xx-design-handoff": {
+      "description": "Design and prototype handoff prompts for other Claude sessions",
+      "next": 102
+    }
+  }
+}

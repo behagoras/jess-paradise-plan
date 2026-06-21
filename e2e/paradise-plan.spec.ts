@@ -1,0 +1,102 @@
+import { test, expect, type Page } from "@playwright/test";
+import { setupClerkTestingToken } from "@clerk/testing/playwright";
+
+const USER = process.env.E2E_CLERK_USER_USERNAME;
+const PASS = process.env.E2E_CLERK_USER_PASSWORD;
+
+/** Drive the planner from the landing screen to the open hand-off sheet. */
+async function planToHandoff(page: Page) {
+  await expect(page.locator('[data-screen-label="Landing"]')).toBeVisible();
+
+  await page.getByRole("button", { name: "Get started" }).click();
+  await expect(page.locator('[data-screen-label="Preferences"]')).toBeVisible();
+
+  // Step 1 → Step 2 → Step 3 (defaults are pre-selected).
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByText("Selections summary")).toBeVisible();
+
+  // Generate → results (the loader runs ~2.9s).
+  await page.getByRole("button", { name: "Surprise me" }).click();
+  await expect(page.locator('[data-screen-label="Results"]')).toBeVisible({
+    timeout: 15_000,
+  });
+
+  await page.getByRole("button", { name: "Select" }).first().click();
+  await expect(
+    page.locator('[data-screen-label="Package detail"]')
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: /Reserve with/ }).click();
+  await expect(page.locator('[data-screen-label="Hand-off"]')).toBeVisible();
+}
+
+test.describe("Paradise Plan — guest flow", () => {
+  test("plans a trip end-to-end and reaches the hand-off sheet", async ({
+    page,
+  }) => {
+    await setupClerkTestingToken({ page });
+    await page.goto("/");
+    await planToHandoff(page);
+
+    // A signed-out visitor is asked to sign in before the trip is saved.
+    await expect(
+      page.getByRole("button", { name: /Sign in to continue/ })
+    ).toBeVisible();
+  });
+
+  test("budget slider and traveler stepper update the summary", async ({
+    page,
+  }) => {
+    await setupClerkTestingToken({ page });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Get started" }).click();
+
+    // Bump travelers 2 → 3 via the "+" stepper.
+    await page.getByRole("button", { name: "+", exact: true }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText("3 travelers")).toBeVisible();
+  });
+});
+
+test.describe("Paradise Plan — authenticated flow", () => {
+  test.skip(
+    !USER || !PASS,
+    "Set E2E_CLERK_USER_USERNAME and E2E_CLERK_USER_PASSWORD in .env.local to run"
+  );
+
+  test("signs in, then confirms the hand-off (saves to Convex)", async ({
+    page,
+  }) => {
+    await setupClerkTestingToken({ page });
+    await page.goto("/");
+
+    // Open the modal sign-in from the page header (not the in-frame one).
+    await page.locator("header").getByRole("button", { name: "Sign in" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.locator('input[name="identifier"]').fill(USER!);
+    await dialog.getByRole("button", { name: "Continue", exact: true }).click();
+    await dialog.locator('input[name="password"]').fill(PASS!);
+    await dialog.getByRole("button", { name: "Continue", exact: true }).click();
+
+    // Signed in → the Clerk UserButton avatar appears in the header.
+    await expect(page.locator(".cl-userButtonTrigger")).toBeVisible({
+      timeout: 20_000,
+    });
+
+    await planToHandoff(page);
+
+    // An authenticated user gets the real "Continue to Expedia" CTA.
+    const confirm = page.getByRole("button", { name: /Continue to Expedia/ });
+    await expect(confirm).toBeVisible();
+    await confirm.click();
+
+    // After saving, the sheet closes back to the package detail.
+    await expect(
+      page.locator('[data-screen-label="Package detail"]')
+    ).toBeVisible({ timeout: 15_000 });
+  });
+});

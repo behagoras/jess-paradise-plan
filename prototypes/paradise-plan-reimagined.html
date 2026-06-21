@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paradise Plan — Reimagined</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Hanken+Grotesk:wght@300..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#08201d;        /* midnight jungle */
+    --ink-2:#0d2b27;
+    --ink-3:#103b34;
+    --sand:#f4e9d6;       /* warm paper */
+    --sand-dim:#cdbfa6;
+    --coral:#ff6a45;      /* sunset */
+    --coral-deep:#e24e2c;
+    --gold:#ffc24b;       /* glint */
+    --aqua:#46d3b6;       /* lagoon */
+    --violet:#7c6bd6;     /* dusk */
+    --line:rgba(244,233,214,.14);
+    --shadow:0 24px 60px -18px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Hanken Grotesk',sans-serif;
+    background:
+      radial-gradient(120% 80% at 80% -10%, #1b4f43 0%, transparent 55%),
+      radial-gradient(100% 70% at 0% 110%, #2a1530 0%, transparent 50%),
+      var(--ink);
+    color:var(--sand);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    gap:48px;padding:40px 24px;flex-wrap:wrap;
+    overflow-x:hidden;
+  }
+  body::before{ /* grain */
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- intro / context column ---------- */
+  .pitch{max-width:340px;align-self:center}
+  .pitch .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--aqua);opacity:.85}
+  .pitch h1{font-family:'Fraunces',serif;font-weight:300;font-size:46px;line-height:1.02;margin:14px 0 18px;letter-spacing:-.02em}
+  .pitch h1 em{font-style:italic;color:var(--gold)}
+  .pitch p{color:var(--sand-dim);font-size:15px;line-height:1.6;margin-bottom:14px}
+  .pitch .modes{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:22px}
+  .pitch .modes li{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;color:var(--sand)}
+  .pitch .modes b{font-weight:700}
+  .pitch .dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+  .pitch small{display:block;color:var(--sand-dim);font-size:12px;margin-top:2px}
+
+  /* ---------- phone ---------- */
+  .phone{
+    width:390px;height:820px;max-height:90vh;position:relative;flex:none;
+    background:linear-gradient(180deg,var(--ink-2),var(--ink));
+    border-radius:46px;padding:14px;
+    box-shadow:var(--shadow), inset 0 0 0 1.5px rgba(244,233,214,.08);
+  }
+  .phone::after{content:"";position:absolute;top:22px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#04130f;border-radius:0 0 16px 16px;z-index:40}
+  .screen{
+    position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;
+    background:var(--ink);display:flex;flex-direction:column;
+  }
+  .statusbar{height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:12px;font-weight:600;color:var(--sand);z-index:30;position:relative}
+  .statusbar .r{display:flex;gap:6px;align-items:center;opacity:.9}
+
+  header.app{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 12px;position:relative;z-index:20}
+  .wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:7px}
+  .wordmark .pin{color:var(--coral)}
+  .streak{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(255,194,75,.12);color:var(--gold);padding:5px 9px;border-radius:20px;border:1px solid rgba(255,194,75,.25)}
+
+  /* views container */
+  .views{flex:1;position:relative;overflow:hidden}
+  .view{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .35s ease;display:flex;flex-direction:column}
+  .view.active{opacity:1;pointer-events:auto}
+
+  /* ---------------- STUMBLE ---------------- */
+  #view-stumble{padding:4px 20px 0}
+  .stumble-hint{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--sand-dim);text-align:center;margin-bottom:10px}
+  .deck{position:relative;flex:1;margin:0 -4px}
+  .card{
+    position:absolute;inset:0;border-radius:28px;overflow:hidden;cursor:grab;
+    box-shadow:0 30px 50px -24px rgba(0,0,0,.8);
+    transform-origin:center 120%;will-change:transform;
+    background:#0c1a17;
+    border:1px solid rgba(244,233,214,.1);
+    user-select:none;
+  }
+  .card.dragging{cursor:grabbing;transition:none}
+  .card .photo{position:absolute;inset:0;background-size:cover;background-position:center;filter:saturate(1.1)}
+  .card .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,32,29,.15) 0%,rgba(8,32,29,.55) 55%,rgba(8,32,29,.96) 100%)}
+  .card .mystery-blur{position:absolute;inset:0;backdrop-filter:blur(14px) brightness(.8);-webkit-backdrop-filter:blur(14px) brightness(.8);transition:opacity .5s}
+  .card-body{position:absolute;left:0;right:0;bottom:0;padding:24px 22px 26px;z-index:3}
+  .vibe-tag{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:5px 10px;border-radius:20px;background:rgba(8,32,29,.55);border:1px solid var(--line);margin-bottom:14px;backdrop-filter:blur(6px)}
+  .card-body h2{font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-.01em;margin-bottom:8px}
+  .card-body h2 .q{color:var(--gold)}
+  .card-body p{font-size:13.5px;color:var(--sand-dim);line-height:1.5;max-width:90%}
+  .card-meta{display:flex;gap:14px;margin-top:16px;font-size:12px;color:var(--sand)}
+  .card-meta span{display:flex;align-items:center;gap:5px}
+  .card-meta b{color:var(--gold);font-weight:700}
+  .reveal-cta{margin-top:18px;width:100%;border:none;border-radius:16px;padding:15px;font-family:'Hanken Grotesk';font-weight:700;font-size:15px;letter-spacing:.01em;color:var(--ink);cursor:pointer;
+    background:linear-gradient(100deg,var(--gold),var(--coral));box-shadow:0 12px 30px -10px rgba(255,106,69,.7);transition:transform .15s}
+  .reveal-cta:active{transform:scale(.97)}
+  .swipe-stamp{position:absolute;top:34px;font-family:'Fraunces',serif;font-style:italic;font-size:34px;font-weight:600;padding:6px 18px;border:3px solid;border-radius:14px;opacity:0;z-index:5;transition:opacity .1s}
+  .swipe-stamp.like{right:24px;color:var(--aqua);border-color:var(--aqua);transform:rotate(14deg)}
+  .swipe-stamp.nope{left:24px;color:var(--coral);border-color:var(--coral);transform:rotate(-14deg)}
+
+  .deck-actions{display:flex;justify-content:center;align-items:center;gap:18px;padding:18px 0 10px}
+  .round{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:rgba(244,233,214,.04);color:var(--sand);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .2s}
+  .round:active{transform:scale(.9)}
+  .round.skip:hover{background:rgba(255,106,69,.16);color:var(--coral)}
+  .round.save:hover{background:rgba(70,211,182,.16);color:var(--aqua)}
+  .round.big{width:66px;height:66px;font-size:26px;background:linear-gradient(120deg,var(--violet),var(--coral-deep));border:none;color:#fff;box-shadow:0 14px 30px -10px rgba(124,107,214,.7)}
+  .deck-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:30px}
+  .deck-empty h3{font-family:'Fraunces',serif;font-weight:400;font-size:24px}
+  .deck-empty p{color:var(--sand-dim);font-size:14px}
+  .deck-empty button{margin-top:6px;background:none;border:1px solid var(--line);color:var(--gold);padding:10px 20px;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer}
+
+  /* ---------------- TUNE ---------------- */
+  #view-tune{padding:6px 22px;overflow-y:auto}
+  #view-tune::-webkit-scrollbar{width:0}
+  .optional-banner{display:flex;gap:10px;align-items:center;background:rgba(70,211,182,.08);border:1px solid rgba(70,211,182,.22);border-radius:14px;padding:11px 13px;font-size:12.5px;color:var(--aqua);margin-bottom:18px}
+  .optional-banner b{color:var(--sand)}
+  .ai-box{position:relative;margin-bottom:22px}
+  .ai-box label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sand-dim);display:block;margin-bottom:8px}
+  .ai-box textarea{width:100%;background:rgba(244,233,214,.04);border:1px solid var(--line);border-radius:16px;color:var(--sand);font-family:'Hanken Grotesk';font-size:14.5px;padding:14px 14px 40px;resize:none;height:92px;line-height:1.45}
+  .ai-box textarea:focus{outline:none;border-color:var(--violet)}
+  .ai-box textarea::placeholder{color:var(--sand-dim);opacity:.7}
+  .ai-go{position:absolute;right:10px;bottom:10px;background:linear-gradient(120deg,var(--violet),var(--coral));border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:12px;cursor:pointer;display:flex;gap:6px;align-items:center}
+  .group{margin-bottom:22px}
+  .group > h4{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sand-dim);margin-bottom:12px;display:flex;justify-content:space-between}
+  .group > h4 span{color:var(--gold)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:13px;padding:9px 14px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--sand);cursor:pointer;transition:all .18s;display:flex;gap:6px;align-items:center}
+  .chip:hover{border-color:var(--sand-dim)}
+  .chip.on{background:var(--sand);color:var(--ink);border-color:var(--sand);font-weight:600}
+  .chip.on.warm{background:var(--coral);border-color:var(--coral);color:#fff}
+  .seg{display:flex;background:rgba(244,233,214,.04);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
+  .seg button{flex:1;border:none;background:none;color:var(--sand-dim);font-family:'Hanken Grotesk';font-size:13px;font-weight:600;padding:10px 6px;border-radius:10px;cursor:pointer;transition:all .18s}
+  .seg button.on{background:var(--ink-3);color:var(--gold)}
+  .slider-row{display:flex;align-items:center;gap:14px}
+  input[type=range]{-webkit-appearance:none;flex:1;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--coral));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--sand);cursor:pointer;border:3px solid var(--coral);box-shadow:0 4px 10px rgba(0,0,0,.4)}
+  .budget-val{font-family:'Fraunces',serif;font-size:22px;color:var(--gold);min-width:74px;text-align:right}
+  .stepper{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;width:fit-content}
+  .stepper button{width:46px;height:44px;background:rgba(244,233,214,.04);border:none;color:var(--sand);font-size:20px;cursor:pointer}
+  .stepper button:active{background:rgba(244,233,214,.12)}
+  .stepper .n{width:54px;text-align:center;font-family:'Fraunces',serif;font-size:20px}
+  .tune-apply{position:sticky;bottom:0;margin:6px -22px 0;padding:14px 22px;background:linear-gradient(180deg,transparent,var(--ink) 30%)}
+  .tune-apply button{width:100%;border:none;border-radius:16px;padding:15px;font-weight:700;font-size:15px;color:var(--ink);cursor:pointer;background:linear-gradient(100deg,var(--gold),var(--coral));box-shadow:0 12px 30px -12px rgba(255,106,69,.7)}
+
+  /* ---------------- SAVED ---------------- */
+  #view-saved{padding:8px 20px;overflow-y:auto}
+  #view-saved::-webkit-scrollbar{width:0}
+  .saved-section-h{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sand-dim);margin:8px 0 12px;display:flex;justify-content:space-between;align-items:center}
+  .alert-card{background:linear-gradient(120deg,rgba(124,107,214,.18),rgba(255,106,69,.1));border:1px solid rgba(124,107,214,.3);border-radius:18px;padding:16px;margin-bottom:22px}
+  .alert-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .alert-card h3{font-family:'Fraunces',serif;font-weight:400;font-size:18px;margin-bottom:4px}
+  .alert-card p{font-size:12.5px;color:var(--sand-dim);line-height:1.45}
+  .alert-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .alert-tags span{font-size:10.5px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:10px;background:rgba(8,32,29,.4);border:1px solid var(--line)}
+  .switch{position:relative;width:46px;height:26px;flex:none;cursor:pointer}
+  .switch input{display:none}
+  .switch .track{position:absolute;inset:0;border-radius:20px;background:rgba(244,233,214,.12);transition:.25s}
+  .switch .knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--sand);transition:.25s}
+  .switch input:checked + .track{background:var(--aqua)}
+  .switch input:checked + .track + .knob{transform:translateX(20px)}
+  .fav-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .fav{border-radius:18px;overflow:hidden;position:relative;height:150px;border:1px solid var(--line);cursor:pointer}
+  .fav .ph{position:absolute;inset:0;background-size:cover;background-position:center}
+  .fav .gr{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(8,32,29,.92))}
+  .fav .lab{position:absolute;left:0;right:0;bottom:0;padding:12px}
+  .fav .lab h5{font-family:'Fraunces',serif;font-weight:500;font-size:15px;line-height:1.1}
+  .fav .lab small{font-size:11px;color:var(--gold);font-family:'JetBrains Mono',monospace}
+  .fav .heart{position:absolute;top:9px;right:9px;font-size:15px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+  .saved-empty{text-align:center;color:var(--sand-dim);font-size:13.5px;padding:30px 10px;line-height:1.6}
+
+  /* ---------------- TABBAR ---------------- */
+  .tabbar{display:flex;justify-content:space-around;align-items:center;padding:12px 10px 22px;background:linear-gradient(180deg,transparent,var(--ink-2));border-top:1px solid var(--line);position:relative;z-index:20}
+  .tab{background:none;border:none;color:var(--sand-dim);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';transition:color .2s;flex:1}
+  .tab .ic{font-size:20px;line-height:1;transition:transform .2s}
+  .tab.on{color:var(--gold)}
+  .tab.on .ic{transform:translateY(-2px)}
+
+  /* ---------------- REVEAL (envelope) ---------------- */
+  .reveal{position:absolute;inset:0;z-index:60;background:radial-gradient(120% 90% at 50% 0%,#13413a,#04120f);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;opacity:0;pointer-events:none;transition:opacity .4s}
+  .reveal.open{opacity:1;pointer-events:auto}
+  .reveal .close-x{position:absolute;top:54px;right:22px;background:rgba(244,233,214,.08);border:1px solid var(--line);color:var(--sand);width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10}
+  .env-stage{perspective:1200px;width:280px;height:200px;position:relative;margin-bottom:10px}
+  .envelope{position:absolute;inset:0;cursor:pointer}
+  .env-pocket{position:absolute;inset:0;background:linear-gradient(160deg,#e9d8b6,#d8c098);border-radius:12px;box-shadow:0 30px 60px -20px rgba(0,0,0,.8);overflow:hidden}
+  .env-pocket::before{content:"";position:absolute;bottom:0;left:0;border-style:solid;border-width:0 0 120px 140px;border-color:transparent transparent #cbb185 transparent}
+  .env-pocket::after{content:"";position:absolute;bottom:0;right:0;border-style:solid;border-width:0 140px 120px 0;border-color:transparent #d4ba90 transparent transparent}
+  .env-flap{position:absolute;top:0;left:0;width:100%;height:100px;background:linear-gradient(180deg,#f0e0c0,#e2cfa9);transform-origin:top;transform:rotateX(0deg);transition:transform .7s cubic-bezier(.6,-0.1,.3,1.4);z-index:5;clip-path:polygon(0 0,100% 0,50% 100%);box-shadow:0 4px 10px rgba(0,0,0,.15)}
+  .seal{position:absolute;top:62px;left:50%;transform:translateX(-50%);width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a5f,var(--coral-deep));z-index:7;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:22px;color:#fff;box-shadow:0 6px 14px rgba(226,78,44,.5);transition:opacity .3s}
+  .ticket{position:absolute;left:50%;bottom:14px;transform:translateX(-50%) translateY(0);width:248px;background:var(--sand);border-radius:10px;padding:0;z-index:3;transition:transform .8s cubic-bezier(.6,-0.05,.3,1.2);box-shadow:0 10px 30px rgba(0,0,0,.3);overflow:hidden;opacity:0}
+  .envelope.opened .env-flap{transform:rotateX(178deg);z-index:1}
+  .envelope.opened .seal{opacity:0}
+  .envelope.opened .ticket{transform:translateX(-50%) translateY(-150px);opacity:1}
+  .ticket .t-top{padding:14px 16px;color:var(--ink);position:relative}
+  .ticket .t-top .r{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--coral-deep)}
+  .ticket .t-top h3{font-family:'Fraunces',serif;font-weight:600;font-size:24px;line-height:1;margin:6px 0 3px}
+  .ticket .t-top .sub{font-size:11px;color:#6b6253}
+  .ticket .perf{border-top:2px dashed #c9bca0;position:relative}
+  .ticket .perf::before,.ticket .perf::after{content:"";position:absolute;top:-9px;width:18px;height:18px;border-radius:50%;background:#13413a}
+  .ticket .perf::before{left:-9px}.ticket .perf::after{right:-9px}
+  .ticket .t-bot{padding:12px 16px 16px;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+  .ticket .t-bot .from small{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8a8071;display:block}
+  .ticket .t-bot .from b{font-family:'Fraunces',serif;font-size:22px;color:var(--coral-deep)}
+
+  .reveal-tap-hint{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--sand-dim);margin-top:6px;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+
+  .reveal-detail{width:100%;max-width:300px;margin-top:22px;opacity:0;transform:translateY(14px);transition:.5s .3s;pointer-events:none}
+  .reveal-detail.show{opacity:1;transform:none;pointer-events:auto}
+  .reveal-detail .why{font-size:13.5px;color:var(--sand-dim);text-align:center;line-height:1.55;margin-bottom:18px;font-style:italic;font-family:'Fraunces',serif}
+  .book-row{display:flex;flex-direction:column;gap:9px}
+  .book{display:flex;align-items:center;gap:12px;background:rgba(244,233,214,.05);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:.18s}
+  .book:hover{border-color:var(--gold);background:rgba(255,194,75,.06);transform:translateX(2px)}
+  .book .ic{font-size:18px}
+  .book .txt{flex:1}
+  .book .txt b{font-size:14px;display:block}
+  .book .txt small{font-size:11px;color:var(--sand-dim)}
+  .book .price{font-family:'Fraunces',serif;color:var(--gold);font-size:16px}
+  .book .arr{color:var(--sand-dim)}
+
+  /* ---------------- CONSOLE DRAWER ---------------- */
+  .console-btn{position:absolute;bottom:96px;right:16px;z-index:35;background:var(--ink-3);border:1px solid var(--gold);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:9px 13px;border-radius:14px;cursor:pointer;display:flex;gap:6px;align-items:center;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
+  .drawer{position:absolute;inset:0;z-index:70;background:rgba(4,18,15,.6);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:flex-end}
+  .drawer.open{opacity:1;pointer-events:auto}
+  .drawer-sheet{width:100%;background:var(--ink-2);border-radius:26px 26px 0 0;border-top:1px solid var(--line);padding:18px 20px 26px;transform:translateY(100%);transition:.35s cubic-bezier(.3,.8,.3,1);max-height:82%;overflow-y:auto}
+  .drawer.open .drawer-sheet{transform:none}
+  .drawer-sheet::-webkit-scrollbar{width:0}
+  .grab{width:40px;height:4px;border-radius:4px;background:var(--sand-dim);opacity:.4;margin:0 auto 16px}
+  .drawer-sheet h3{font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin-bottom:4px}
+  .drawer-sheet .sub{font-size:12.5px;color:var(--sand-dim);margin-bottom:16px;line-height:1.45}
+  .export-tabs{display:flex;gap:6px;margin-bottom:12px}
+  .export-tabs button{flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--sand-dim);cursor:pointer}
+  .export-tabs button.on{background:var(--ink-3);color:var(--gold);border-color:var(--gold)}
+  pre.export{background:#04120f;border:1px solid var(--line);border-radius:14px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.55;color:var(--aqua);white-space:pre-wrap;word-break:break-word;max-height:230px;overflow-y:auto;margin-bottom:12px}
+  pre.export::-webkit-scrollbar{width:0}
+  .copy-btn{width:100%;background:linear-gradient(100deg,var(--gold),var(--coral));border:none;color:var(--ink);font-weight:700;font-size:14px;padding:13px;border-radius:14px;cursor:pointer}
+  .copy-btn.done{background:var(--aqua)}
+
+  .toast{position:absolute;bottom:120px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink-3);border:1px solid var(--gold);color:var(--gold);font-size:12.5px;font-family:'JetBrains Mono',monospace;padding:10px 16px;border-radius:14px;opacity:0;transition:.3s;z-index:80;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:880px){.pitch{display:none}}
+</style>
+</head>
+<body>
+
+  <!-- CONTEXT COLUMN -->
+  <aside class="pitch">
+    <div class="kicker">Paradise Plan · Reimagined</div>
+    <h1>Stop filling forms. <em>Start stumbling</em> into paradise.</h1>
+    <p>The original flow asks for 12 fields before showing anything. This prototype flips it: the surprise comes first, filters are optional, and the app learns from what you save.</p>
+    <p>Tres formas de entrar, un solo motor de sorpresa →</p>
+    <ul class="modes">
+      <li><span class="dot" style="background:var(--coral)"></span><div><b>Stumble</b> — swipe mystery escapes, zero effort.<small>Like = guardar · Skip · Tap = revelar</small></div></li>
+      <li><span class="dot" style="background:var(--gold)"></span><div><b>Tune</b> — filtros opcionales + describe tu viaje a la IA.<small>Afina la sorpresa, no la bloquees</small></div></li>
+      <li><span class="dot" style="background:var(--violet)"></span><div><b>Saved + Alert</b> — guarda un filtro, te avisamos.<small>El modelo Going: clics recurrentes = afiliado</small></div></li>
+    </ul>
+    <p style="margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--aqua)">↓ Toca <b style="color:var(--gold)">⚙ export</b> dentro del teléfono para copiar el estado como prompt y seguir iterando con Claude.</p>
+  </aside>
+
+  <!-- PHONE -->
+  <div class="phone">
+    <div class="screen">
+      <div class="statusbar"><span>9:41</span><span class="r">✦ 5G ▰▰▰</span></div>
+      <header class="app">
+        <div class="wordmark"><span class="pin">⊛</span> Paradise Plan</div>
+        <div class="streak" id="streak">◔ 3 sorpresas hoy</div>
+      </header>
+
+      <div class="views">
+        <!-- STUMBLE -->
+        <section class="view active" id="view-stumble">
+          <div class="stumble-hint">← skip · tap to reveal · save →</div>
+          <div class="deck" id="deck"></div>
+          <div class="deck-actions">
+            <button class="round skip" id="btnSkip" title="Skip">✕</button>
+            <button class="round big" id="btnReveal" title="Reveal">✦</button>
+            <button class="round save" id="btnSave" title="Save">♡</button>
+          </div>
+        </section>
+
+        <!-- TUNE -->
+        <section class="view" id="view-tune">
+          <div class="optional-banner">◎ <span><b>Todo es opcional.</b> Cada filtro afina la sorpresa — ninguno la bloquea.</span></div>
+
+          <div class="ai-box">
+            <label>Describe tu escape · la IA llena los filtros</label>
+            <textarea id="aiInput" placeholder="ej. quiero desconectarme, algo verde, sin multitudes, presupuesto medio, una semana…"></textarea>
+            <button class="ai-go" id="aiGo">✦ Interpretar</button>
+          </div>
+
+          <div class="group">
+            <h4>Vibe <span id="vibeCount"></span></h4>
+            <div class="chips" id="vibeChips"></div>
+          </div>
+
+          <div class="group">
+            <h4>Clima</h4>
+            <div class="chips" id="weatherChips"></div>
+          </div>
+
+          <div class="group">
+            <h4>Cuántos días</h4>
+            <div class="seg" id="daysSeg"></div>
+          </div>
+
+          <div class="group">
+            <h4>Presupuesto por persona <span id="budgetTag"></span></h4>
+            <div class="slider-row">
+              <input type="range" id="budget" min="300" max="5000" step="100" value="1500">
+              <div class="budget-val" id="budgetVal">$1,500</div>
+            </div>
+          </div>
+
+          <div class="group">
+            <h4>Cuántas personas</h4>
+            <div class="stepper">
+              <button id="pplMinus">−</button>
+              <div class="n" id="pplN">2</div>
+              <button id="pplPlus">+</button>
+            </div>
+          </div>
+
+          <div class="tune-apply"><button id="applyTune">✦ Barajar mis sorpresas</button></div>
+        </section>
+
+        <!-- SAVED -->
+        <section class="view" id="view-saved">
+          <div class="saved-section-h">Tus alertas</div>
+          <div class="alert-card">
+            <div class="top">
+              <div>
+                <h3>Mi paraíso semanal</h3>
+                <p id="alertDesc">Filtro guardado · te avisamos cuando aparezca un deal fresco que matchee.</p>
+              </div>
+              <label class="switch"><input type="checkbox" id="alertSwitch" checked><span class="track"></span><span class="knob"></span></label>
+            </div>
+            <div class="alert-tags" id="alertTags"></div>
+          </div>
+
+          <div class="saved-section-h">Guardados <span id="favCount" style="color:var(--gold);font-family:'JetBrains Mono',monospace">0</span></div>
+          <div class="fav-grid" id="favGrid"></div>
+          <div class="saved-empty" id="savedEmpty">Aún no guardas nada.<br>Ve a <b style="color:var(--gold)">Stumble</b> y desliza → en lo que te enamore.</div>
+        </section>
+      </div>
+
+      <!-- REVEAL OVERLAY -->
+      <div class="reveal" id="reveal">
+        <button class="close-x" id="revealClose">✕</button>
+        <div class="env-stage">
+          <div class="envelope" id="envelope">
+            <div class="env-pocket"></div>
+            <div class="ticket" id="ticket">
+              <div class="t-top">
+                <div class="r" id="tkRegion">DESTINO SORPRESA</div>
+                <h3 id="tkName">—</h3>
+                <div class="sub" id="tkSub">—</div>
+              </div>
+              <div class="perf"></div>
+              <div class="t-bot">
+                <div class="from"><small>desde</small><b id="tkPrice">$—</b></div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#8a8071">PP-2026 ✦ 48H FRESH</div>
+              </div>
+            </div>
+            <div class="env-flap"></div>
+            <div class="seal">P</div>
+          </div>
+        </div>
+        <div class="reveal-tap-hint" id="tapHint">toca el sobre para abrir</div>
+
+        <div class="reveal-detail" id="revealDetail">
+          <p class="why" id="whyText">—</p>
+          <div class="book-row">
+            <div class="book" data-book="flight"><span class="ic">✈</span><div class="txt"><b>Vuelo</b><small id="bFlight">—</small></div><span class="price" id="pFlight">$—</span><span class="arr">→</span></div>
+            <div class="book" data-book="hotel"><span class="ic">⌂</span><div class="txt"><b>Estadía</b><small id="bHotel">—</small></div><span class="price" id="pHotel">$—</span><span class="arr">→</span></div>
+            <div class="book" data-book="activity"><span class="ic">❖</span><div class="txt"><b>Experiencia</b><small id="bAct">—</small></div><span class="price" id="pAct">$—</span><span class="arr">→</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPORT CONSOLE -->
+      <button class="console-btn" id="consoleBtn">⚙ export</button>
+      <div class="drawer" id="drawer">
+        <div class="drawer-sheet">
+          <div class="grab"></div>
+          <h3>Stay in the loop</h3>
+          <div class="sub">Copia el estado actual del diseño y pégalo en Claude para iterar — exactamente como propone el artículo de HTML.</div>
+          <div class="export-tabs">
+            <button class="on" data-exp="prompt">Copy as prompt</button>
+            <button data-exp="json">Copy as JSON</button>
+          </div>
+          <pre class="export" id="exportOut"></pre>
+          <button class="copy-btn" id="copyBtn">Copiar</button>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+
+      <!-- TABBAR -->
+      <nav class="tabbar">
+        <button class="tab on" data-view="stumble"><span class="ic">✦</span>Stumble</button>
+        <button class="tab" data-view="tune"><span class="ic">◍</span>Tune</button>
+        <button class="tab" data-view="saved"><span class="ic">♡</span>Saved</button>
+      </nav>
+
+    </div>
+  </div>
+
+<script>
+/* ============ DATA ============ */
+const PHOTOS = {
+  jungle:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80',
+  coast:'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?w=800&q=80',
+  desert:'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80',
+  alpine:'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80',
+  island:'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&q=80',
+  city:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80',
+  lake:'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800&q=80',
+  surf:'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800&q=80'
+};
+const DESTINOS = [
+  {id:1, photo:'jungle', tone:'#1f6b4f', vibe:'Verde · Silencio', teaser:'Un valle entre montañas donde la señal muere y el río manda.', name:'Lares', region:'Sur de Perú', sub:'Termales andinas · 2.800 msnm', price:740, days:'5–6 días', why:'Te mandamos aquí porque pediste desconectarte, verde, y sin multitudes.', flight:'LIM con escala', hotel:'Eco-lodge de adobe', act:'Caminata termal', pF:310,pH:55,pA:40},
+  {id:2, photo:'coast', tone:'#1d6a7a', vibe:'Costa · Lento', teaser:'Acantilados blancos, pueblos sin coches, todo sabe a sal.', name:'Cómiso', region:'Sicilia, Italia', sub:'Barroco tardío · mar Jónico', price:980, days:'una semana', why:'Costa tranquila, buena comida y nada turístico — justo lo que marcaste.', flight:'CTA directo', hotel:'Masseria de piedra', act:'Ruta de mercados', pF:420,pH:74,pA:30},
+  {id:3, photo:'desert', tone:'#a8632f', vibe:'Desierto · Cielo', teaser:'Dunas que cambian de color y un silencio que se oye.', name:'Merzouga', region:'Sahara, Marruecos', sub:'Erg Chebbi · noches de 10.000 estrellas', price:620, days:'3–4 días', why:'Querías algo crudo, cálido y lejos del ruido. El desierto cumple.', flight:'RAK + traslado', hotel:'Campamento bereber', act:'Dunas al amanecer', pF:260,pH:48,pA:60},
+  {id:4, photo:'alpine', tone:'#3a6b8a', vibe:'Alpino · Fresco', teaser:'Praderas verticales, vacas con campanas, aire que corta.', name:'Lauterbrunnen', region:'Berna, Suiza', sub:'72 cascadas · valle glaciar', price:1340, days:'una semana', why:'Frío, verde y vertiginoso — para respirar hondo lejos de todo.', flight:'ZRH + tren', hotel:'Chalet de madera', act:'Teleférico al filo', pF:520,pH:120,pA:55},
+  {id:5, photo:'island', tone:'#127a6e', vibe:'Isla · Caliente', teaser:'Agua tan clara que el barco parece flotar en aire.', name:'Gili Air', region:'Lombok, Indonesia', sub:'Sin autos · solo bicis y mar', price:890, days:'2 semanas', why:'Caliente, isla, lento. Aquí el reloj es opcional.', flight:'DPS + ferry', hotel:'Bungalow sobre arena', act:'Snorkel con tortugas', pF:480,pH:38,pA:25},
+  {id:6, photo:'lake', tone:'#2c6e63', vibe:'Lago · Bruma', teaser:'Un espejo de agua entre bosques que amanece con niebla.', name:'Bled', region:'Alta Carniola, Eslovenia', sub:'Isla con campanario · castillo en risco', price:760, days:'5–6 días', why:'Verde, fresco y de cuento — sin las multitudes de los Alpes.', flight:'LJU directo', hotel:'Pensión junto al lago', act:'Remo a la isla', pF:330,pH:64,pA:20}
+];
+const VIBES = ['Playa','Naturaleza','Vida nocturna','Comida','Aventura','Cultura','Lujo','Escondido','Romántico','Relax'];
+const WEATHER = ['Caliente','Templado','Fresco','Nieve','Seco'];
+const DAYS = ['3–4 días','Una semana','2 semanas','Flexible'];
+
+/* ============ STATE ============ */
+const state = {
+  vibes:new Set(['Naturaleza','Escondido']),
+  weather:new Set(['Templado']),
+  days:'Una semana',
+  budget:1500,
+  people:2,
+  alert:true,
+  favorites:[],
+  seen:0
+};
+
+/* ============ HELPERS ============ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const money=n=>'$'+n.toLocaleString('en-US');
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+/* ============ DECK / STUMBLE ============ */
+let queue=[...DESTINOS];
+function renderDeck(){
+  const deck=$('#deck'); deck.innerHTML='';
+  if(queue.length===0){
+    deck.innerHTML=`<div class="deck-empty"><h3>Por hoy es todo ✦</h3><p>Afina tus filtros para barajar nuevas sorpresas, o vuelve mañana.</p><button id="reshuffle">↻ Volver a barajar</button></div>`;
+    $('#reshuffle').onclick=()=>{queue=[...DESTINOS];renderDeck();};
+    return;
+  }
+  // render up to 3 stacked, top last in DOM
+  const show=queue.slice(0,3).reverse();
+  show.forEach((d,i)=>{
+    const isTop=i===show.length-1;
+    const depth=show.length-1-i;
+    const el=document.createElement('div');
+    el.className='card';
+    el.style.transform=`translateY(${depth*14}px) scale(${1-depth*0.04})`;
+    el.style.zIndex=10+i;
+    el.innerHTML=`
+      <div class="photo" style="background-image:url('${PHOTOS[d.photo]}')"></div>
+      <div class="mystery-blur"></div>
+      <div class="veil"></div>
+      <div class="swipe-stamp like">guardar</div>
+      <div class="swipe-stamp nope">skip</div>
+      <div class="card-body">
+        <span class="vibe-tag" style="color:${d.tone};box-shadow:inset 0 0 0 1px ${d.tone}55">◈ ${d.vibe}</span>
+        <h2>Un paraíso <span class="q">sin revelar</span></h2>
+        <p>${d.teaser}</p>
+        <div class="card-meta"><span>◷ <b>${d.days}</b></span><span>◎ desde <b>${money(d.price)}</b></span></div>
+        <button class="reveal-cta">✦ Destapar este destino</button>
+      </div>`;
+    if(isTop){attachDrag(el,d);el.querySelector('.reveal-cta').onclick=ev=>{ev.stopPropagation();openReveal(d);};}
+    deck.appendChild(el);
+  });
+}
+function topCard(){return queue[0];}
+function decide(dir){ // 'like' | 'nope'
+  const d=queue.shift(); if(!d)return;
+  state.seen++; updateStreak();
+  if(dir==='like'){addFav(d);toast('♡ Guardado en tu lista');}
+  renderDeck();
+}
+function addFav(d){ if(!state.favorites.find(f=>f.id===d.id)){state.favorites.push(d);renderFavs();} }
+
+function attachDrag(el,d){
+  let sx=0,sy=0,dx=0,dy=0,drag=false;
+  const start=e=>{drag=true;el.classList.add('dragging');const p=e.touches?e.touches[0]:e;sx=p.clientX;sy=p.clientY;};
+  const move=e=>{if(!drag)return;const p=e.touches?e.touches[0]:e;dx=p.clientX-sx;dy=p.clientY-sy;
+    el.style.transform=`translate(${dx}px,${dy}px) rotate(${dx*0.06}deg)`;
+    el.querySelector('.like').style.opacity=Math.max(0,dx/90);
+    el.querySelector('.nope').style.opacity=Math.max(0,-dx/90);};
+  const end=()=>{if(!drag)return;drag=false;el.classList.remove('dragging');
+    if(Math.abs(dx)>95){
+      const dir=dx>0?'like':'nope';
+      el.style.transition='transform .4s ease';
+      el.style.transform=`translate(${dx>0?500:-500}px,${dy}px) rotate(${dx*0.1}deg)`;
+      setTimeout(()=>decide(dir),200);
+    } else if(Math.abs(dx)<8 && Math.abs(dy)<8){ openReveal(d);
+      el.style.transform='';
+    } else { el.style.transition='transform .3s';el.style.transform='';el.querySelector('.like').style.opacity=0;el.querySelector('.nope').style.opacity=0;}
+    dx=dy=0;};
+  el.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  el.addEventListener('touchstart',start,{passive:true});el.addEventListener('touchmove',move,{passive:true});el.addEventListener('touchend',end);
+}
+$('#btnSkip').onclick=()=>{const c=$('#deck .card:last-child');if(c){c.style.transition='transform .4s';c.style.transform='translate(-500px,40px) rotate(-16deg)';}setTimeout(()=>decide('nope'),200);};
+$('#btnSave').onclick=()=>{const c=$('#deck .card:last-child');if(c){c.style.transition='transform .4s';c.style.transform='translate(500px,40px) rotate(16deg)';}setTimeout(()=>decide('like'),200);};
+$('#btnReveal').onclick=()=>{const d=topCard();if(d)openReveal(d);};
+
+function updateStreak(){$('#streak').textContent=`◔ ${state.seen} sorpresa${state.seen===1?'':'s'} hoy`;}
+
+/* ============ REVEAL ============ */
+let currentReveal=null;
+function openReveal(d){
+  currentReveal=d;
+  $('#tkRegion').textContent=d.region.toUpperCase();
+  $('#tkName').textContent=d.name;
+  $('#tkSub').textContent=d.sub;
+  $('#tkPrice').textContent=money(d.price);
+  $('#whyText').textContent='“'+d.why+'”';
+  $('#bFlight').textContent=d.flight; $('#pFlight').textContent=money(d.pF);
+  $('#bHotel').textContent=d.hotel; $('#pHotel').textContent=money(d.pH);
+  $('#bAct').textContent=d.act; $('#pAct').textContent=money(d.pA)+'/día';
+  const env=$('#envelope'); env.classList.remove('opened');
+  $('#revealDetail').classList.remove('show'); $('#tapHint').style.opacity='1';
+  $('#reveal').classList.add('open');
+}
+$('#envelope').onclick=()=>{
+  const env=$('#envelope');
+  if(env.classList.contains('opened'))return;
+  env.classList.add('opened'); $('#tapHint').style.opacity='0';
+  setTimeout(()=>$('#revealDetail').classList.add('show'),650);
+};
+$('#revealClose').onclick=()=>$('#reveal').classList.remove('open');
+$$('.book').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.book; const lbl={flight:'vuelo',hotel:'estadía',activity:'experiencia'}[k];
+  toast('→ Abriendo '+lbl+' en partner (cookie afiliado)');
+});
+
+/* ============ TUNE ============ */
+function buildChips(arr,host,set,warm){
+  const h=$(host); h.innerHTML='';
+  arr.forEach(v=>{
+    const c=document.createElement('button');
+    c.className='chip'+(set.has(v)?' on'+(warm?' warm':''):'');
+    c.textContent=v;
+    c.onclick=()=>{ if(set.has(v))set.delete(v);else set.add(v); buildChips(arr,host,set,warm); syncTuneLabels();};
+    h.appendChild(c);
+  });
+}
+function buildDays(){
+  const h=$('#daysSeg'); h.innerHTML='';
+  DAYS.forEach(v=>{const b=document.createElement('button');b.textContent=v;b.className=state.days===v?'on':'';b.onclick=()=>{state.days=v;buildDays();};h.appendChild(b);});
+}
+function syncTuneLabels(){
+  $('#vibeCount').textContent=state.vibes.size?state.vibes.size+' elegidos':'';
+}
+$('#budget').oninput=e=>{state.budget=+e.target.value;$('#budgetVal').textContent=money(state.budget);$('#budgetTag').textContent='';};
+$('#pplMinus').onclick=()=>{state.people=Math.max(1,state.people-1);$('#pplN').textContent=state.people;};
+$('#pplPlus').onclick=()=>{state.people=Math.min(12,state.people+1);$('#pplN').textContent=state.people;};
+$('#applyTune').onclick=()=>{ queue=[...DESTINOS]; renderDeck(); switchView('stumble'); toast('✦ Sorpresas barajadas con tus filtros'); };
+
+/* AI interpret — fake NLP that lights up matching chips */
+$('#aiGo').onclick=()=>{
+  const t=$('#aiInput').value.toLowerCase();
+  if(!t.trim()){toast('Escribe algo y la IA lo interpreta');return;}
+  const map={'verde':'Naturaleza','natural':'Naturaleza','desconect':'Escondido','sin multitud':'Escondido','escond':'Escondido','playa':'Playa','mar':'Playa','fiesta':'Vida nocturna','noche':'Vida nocturna','comer':'Comida','comida':'Comida','aventur':'Aventura','cultur':'Cultura','histor':'Cultura','lujo':'Lujo','relax':'Relax','tranquil':'Relax','romanc':'Romántico','pareja':'Romántico'};
+  const wmap={'calor':'Caliente','caliente':'Caliente','calid':'Caliente','frio':'Fresco','fresc':'Fresco','nieve':'Nieve'};
+  let hits=0;
+  state.vibes.clear(); state.weather.clear();
+  for(const k in map){if(t.includes(k)){state.vibes.add(map[k]);hits++;}}
+  for(const k in wmap){if(t.includes(k)){state.weather.add(wmap[k]);hits++;}}
+  if(t.includes('semana'))state.days='Una semana';
+  if(t.includes('mes')||t.includes('2 sem'))state.days='2 semanas';
+  if(t.includes('finde')||t.includes('corto'))state.days='3–4 días';
+  if(t.includes('barato')||t.includes('econ'))$('#budget').value=state.budget=600;
+  if(t.includes('medio'))$('#budget').value=state.budget=1500;
+  if(t.includes('lujo')||t.includes('caro'))$('#budget').value=state.budget=4000;
+  $('#budgetVal').textContent=money(state.budget);
+  if(!state.vibes.size)state.vibes.add('Naturaleza');
+  buildChips(VIBES,'#vibeChips',state.vibes);buildChips(WEATHER,'#weatherChips',state.weather,true);buildDays();syncTuneLabels();
+  toast(hits?`✦ IA marcó ${hits} filtro${hits===1?'':'s'}`:'✦ No encontré pistas claras');
+};
+
+/* ============ SAVED ============ */
+function renderFavs(){
+  const grid=$('#favGrid'); grid.innerHTML='';
+  $('#favCount').textContent=state.favorites.length;
+  $('#savedEmpty').style.display=state.favorites.length?'none':'block';
+  state.favorites.forEach(d=>{
+    const el=document.createElement('div');
+    el.className='fav';
+    el.innerHTML=`<div class="ph" style="background-image:url('${PHOTOS[d.photo]}')"></div><div class="gr"></div><div class="heart">♥</div><div class="lab"><h5>${d.name}</h5><small>${money(d.price)} · ${d.days}</small></div>`;
+    el.onclick=()=>openReveal(d);
+    grid.appendChild(el);
+  });
+}
+function renderAlertTags(){
+  const h=$('#alertTags'); h.innerHTML='';
+  [...state.vibes,...state.weather,state.days,'≤ '+money(state.budget)].forEach(t=>{const s=document.createElement('span');s.textContent=t;h.appendChild(s);});
+}
+$('#alertSwitch').onchange=e=>{state.alert=e.target.checked;toast(state.alert?'🔔 Alerta activada':'Alerta en pausa');};
+
+/* ============ NAV ============ */
+function switchView(v){
+  $$('.view').forEach(x=>x.classList.remove('active'));
+  $('#view-'+v).classList.add('active');
+  $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
+  if(v==='saved'){renderAlertTags();}
+}
+$$('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));
+
+/* ============ EXPORT CONSOLE ============ */
+let expMode='prompt';
+function buildExport(){
+  const cfg={
+    entry_modes:['stumble','tune','saved+alert'],
+    vibes:[...state.vibes], weather:[...state.weather],
+    days:state.days, budget_per_person:state.budget, travelers:state.people,
+    alert_enabled:state.alert,
+    favorites:state.favorites.map(f=>f.name),
+    seen_this_session:state.seen
+  };
+  if(expMode==='json'){ $('#exportOut').textContent=JSON.stringify(cfg,null,2); return; }
+  const p=
+`Refina el prototipo de Paradise Plan con esta configuración de diseño actual:
+
+ENTRADA: el usuario llega por modo "Stumble" (swipe de sorpresas), filtros 100% opcionales.
+PREFERENCIAS ACTIVAS:
+- Vibe: ${cfg.vibes.join(', ')||'(ninguno)'}
+- Clima: ${cfg.weather.join(', ')||'(cualquiera)'}
+- Duración: ${cfg.days}
+- Presupuesto/persona: ${money(cfg.budget_per_person)}
+- Viajeros: ${cfg.travelers}
+- Alerta de filtro guardado: ${cfg.alert_enabled?'ON':'OFF'}
+- Favoritos: ${cfg.favorites.join(', ')||'(ninguno)'}
+
+PIDO:
+1. Genera la pantalla de reveal (sobre sellado) con estas preferencias.
+2. Propón el copy del push de notificación del filtro guardado (misterioso, sin revelar destino).
+3. Para cada favorito, sugiere los 3 CTAs afiliados (vuelo/hotel/experiencia).
+Mantén la estética tropical-noir y el principio "la sorpresa primero, el formulario nunca".`;
+  $('#exportOut').textContent=p;
+}
+$('#consoleBtn').onclick=()=>{buildExport();$('#drawer').classList.add('open');};
+$('#drawer').onclick=e=>{if(e.target===$('#drawer'))$('#drawer').classList.remove('open');};
+$$('.export-tabs button').forEach(b=>b.onclick=()=>{expMode=b.dataset.exp;$$('.export-tabs button').forEach(x=>x.classList.toggle('on',x===b));buildExport();});
+$('#copyBtn').onclick=()=>{
+  navigator.clipboard.writeText($('#exportOut').textContent).then(()=>{
+    const b=$('#copyBtn');b.textContent='✓ Copiado al portapapeles';b.classList.add('done');
+    setTimeout(()=>{b.textContent='Copiar';b.classList.remove('done');},1600);
+  }).catch(()=>toast('Copia manual: selecciona el texto'));
+};
+
+/* ============ INIT ============ */
+renderDeck();
+buildChips(VIBES,'#vibeChips',state.vibes);
+buildChips(WEATHER,'#weatherChips',state.weather,true);
+buildDays(); syncTuneLabels(); renderFavs();
+$('#budgetVal').textContent=money(state.budget);
+</script>
+</body>
+</html>
