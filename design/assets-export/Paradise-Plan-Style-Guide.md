@@ -243,4 +243,4 @@ Estilo **mixto, predominantemente de línea (outline/stroke), monocromático (bl
 
 ---
 
-*Assets analizados:* `/Users/behar/git/people/jess/paradise-plan/assets-export/mobile-png/page-01.png`, `page-02.png`, `page-03.png`, `page-11.png`, `page-13.png`.
+*Assets analizados:* `/Users/behar/git/people/jess/paradise-plan/design/assets-export/mobile-png/page-01.png`, `page-02.png`, `page-03.png`, `page-11.png`, `page-13.png`.

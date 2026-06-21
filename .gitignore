@@ -159,3 +159,9 @@ graphify-out/
 
 # Large local handoff bundle
 paradise-plan-handoff.zip
+
+# Generated handoff bundle (rebuild with handoff-build/build.sh)
+handoff-build/paradise-plan-handoff/
+
+# Scratch
+tmp/

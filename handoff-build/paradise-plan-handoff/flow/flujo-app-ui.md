@@ -1,6 +1,6 @@
 # Flujo de la App — Paradise Plan (UI)
 
-> Reconstruido a partir de las diapositivas de UI en `project-base/PP/` (20 láminas;
+> Reconstruido a partir de las diapositivas de UI en `design/project-base/PP/` (20 láminas;
 > las láminas 4, 11, 13, 14, 17 y 19 están en blanco).
 > Paradise Plan es una app de reserva de viajes **orientada a presupuesto y preferencias**,
 > no a destino: el usuario define qué quiere y el sistema le entrega un "paquete sorpresa".

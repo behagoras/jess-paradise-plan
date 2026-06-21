@@ -70,6 +70,25 @@ convex/
   auth.config.ts            # Clerk JWT bridge
 ```
 
+### Repo layout (non-app)
+
+```
+docs/            # canonical knowledge vault (Obsidian, LLM-Wiki method)
+.prompts/        # canonical design-handoff prompts (registry)
+design/          # all source & design material
+  project-base/    # original 2019 XD source: screens, presentation, PDFs
+  assets-export/   # exported style guide, screen map, logos, mobile renders
+  prototypes/      # standalone HTML prototypes
+  screenshots/     # current app screenshots
+handoff-build/   # generator for the self-contained handoff bundle
+  build.sh         # rebuilds paradise-plan-handoff/ from canonical sources
+  bundle-readme.md # the bundle's own README (source)
+```
+
+Documentation has a **single source of truth**: edit content in `docs/`,
+`design/`, or `.prompts/`, then run `./handoff-build/build.sh` to regenerate the
+shippable handoff bundle (gitignored — never hand-edited).
+
 ## Getting started
 
 1. Install deps:
