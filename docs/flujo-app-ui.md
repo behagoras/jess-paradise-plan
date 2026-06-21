@@ -1,5 +1,13 @@
 # Flujo de la App — Paradise Plan (UI)
 
+> **STATUS: Historical reference — 2019 XD prototype.** This document describes
+> the original Adobe XD checkout flow (first-party "Checkout" with in-app
+> payment). It is NOT the current product. The built app is an affiliate-only
+> hand-off (no first-party checkout — we deep-link out to the provider; see the
+> ADR + "Affiliate-only checkout" decision in the root `README.md`), and the
+> forward product direction is the Drift discovery feed (`docs/wiki/`). Kept for
+> historical context only; do not treat its Checkout step as current.
+
 > Reconstruido a partir de las diapositivas de UI en `design/project-base/PP/` (20 láminas;
 > las láminas 4, 11, 13, 14, 17 y 19 están en blanco).
 > Paradise Plan es una app de reserva de viajes **orientada a presupuesto y preferencias**,
