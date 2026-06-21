@@ -36,6 +36,20 @@ landing → wizard (step 1 → 2 → 3) → generating → results → detail �
 - **Hand-off** — bottom sheet that persists the trip to Convex and sends the
   user to the booking provider.
 
+### Guest sessions (anonymous → Clerk)
+
+Clerk has no anonymous users, so a guest is given a random **`pp_guest`** token
+(set as a cookie by `middleware.ts` on first visit). At hand-off:
+
+- **Guest** → `trips.saveDraft({ guestId, … })` stores a draft row keyed by the
+  token (no `userId`). The token is an unguessable capability, not a credential.
+- **Signed in** → `trips.save(…)` stores the trip under the Clerk subject.
+
+When a guest later signs in, `<GuestClaim>` (mounted under the providers) fires
+`trips.claimGuestTrips({ guestId })` once, which reassigns those draft rows to
+the user (`userId` set, `guestId` cleared). So login is only ever needed *to
+keep* what you already built — never to start.
+
 ### Key files
 
 ```

@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { fmt, type PlannerApi } from "@/lib/usePlanner";
+import { useGuestId } from "@/lib/useGuestId";
 import { PlaneGlyph } from "../Logo";
 
 export function HandoffSheet({ planner }: { planner: PlannerApi }) {
   const { computed, state, go } = planner;
   const { dest, provider, grand, travelersLabel } = computed;
+  const { isAuthenticated } = useConvexAuth();
+  const guestId = useGuestId();
   const saveTrip = useMutation(api.trips.save);
+  const saveDraft = useMutation(api.trips.saveDraft);
   const [saving, setSaving] = useState(false);
 
   const close = (e?: React.MouseEvent) => {
@@ -18,19 +22,23 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
 
   const confirm = async () => {
     setSaving(true);
+    const trip = {
+      destinationKey: dest.key,
+      destinationName: dest.name,
+      region: dest.region,
+      provider,
+      travelers: state.travelers,
+      total: Math.round(computed.grand),
+      perPerson: Math.round(computed.perPerson),
+      when: state.when,
+      departure: state.departure,
+      activityOn: state.activityOn,
+    };
     try {
-      await saveTrip({
-        destinationKey: dest.key,
-        destinationName: dest.name,
-        region: dest.region,
-        provider,
-        travelers: state.travelers,
-        total: Math.round(computed.grand),
-        perPerson: Math.round(computed.perPerson),
-        when: state.when,
-        departure: state.departure,
-        activityOn: state.activityOn,
-      });
+      // Signed in → save under the user. Guest → save a draft keyed by the
+      // pp_guest cookie token; GuestClaim migrates it on a later sign-in.
+      if (isAuthenticated) await saveTrip(trip);
+      else if (guestId) await saveDraft({ guestId, ...trip });
     } catch {
       // Soft-fail: in the design flow the hand-off proceeds regardless.
     } finally {
