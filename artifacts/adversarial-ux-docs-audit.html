@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paradise Plan Adversarial UX and Docs Audit</title>
+  <style>
+    :root {
+      --bg: #11100e;
+      --panel: #1d1a16;
+      --card: #fffaf2;
+      --ink: #211b14;
+      --muted: #75695e;
+      --line: #e8d8c4;
+      --accent: #f0542d;
+      --warn: #eed350;
+      --good: #1e8e5a;
+      --bad: #b9372f;
+      --blue: #1f6f9c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #f8efe2;
+      font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      padding: 42px clamp(18px, 4vw, 58px) 30px;
+      background: linear-gradient(135deg, #2b1812, #161412 62%, #253a35);
+      border-bottom: 1px solid rgba(255,255,255,.14);
+    }
+    main { padding: 30px clamp(18px, 4vw, 58px) 58px; }
+    h1, h2, h3 { margin: 0; line-height: 1.1; }
+    h1 { max-width: 980px; font-size: clamp(34px, 5vw, 66px); letter-spacing: 0; }
+    h2 { margin: 34px 0 14px; font-size: clamp(24px, 3vw, 36px); }
+    h3 { margin-bottom: 8px; font-size: 18px; }
+    p { margin: 8px 0 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; color: #e6d9c8; }
+    .pill {
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.22);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(255,255,255,.08);
+    }
+    .grid { display: grid; gap: 16px; }
+    .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      color: var(--ink);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 22px 55px rgba(0,0,0,.22);
+    }
+    .dark-card {
+      color: #f8efe2;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .badge {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .sev-critical { color: #fff; background: var(--bad); }
+    .sev-high { color: #731d17; background: #ffd8d0; border-color: #ef9d8e; }
+    .sev-med { color: #5d4a00; background: #fff1b8; border-color: #d8bc4f; }
+    .sev-low { color: #145a35; background: #ddf1e4; border-color: #8fc49f; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; color: var(--ink); background: var(--card); border-radius: 10px; overflow: hidden; }
+    th, td { border-bottom: 1px solid var(--line); padding: 11px 10px; text-align: left; vertical-align: top; }
+    th { background: #fff0dd; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    code {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff8ec;
+      color: #4a3424;
+      padding: 1px 5px;
+      font-size: 12px;
+    }
+    .quote {
+      border-left: 5px solid var(--accent);
+      padding-left: 14px;
+      margin: 10px 0 0;
+      color: #5e5148;
+    }
+    .pass {
+      border-top: 4px solid var(--accent);
+    }
+    details { margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); }
+    summary { cursor: pointer; padding: 12px 14px; font-weight: 900; }
+    details > div { padding: 0 14px 14px; }
+    .risk-register td:first-child { font-weight: 900; }
+    .confidence { color: var(--blue); font-weight: 900; }
+    .method { max-width: 1020px; color: #e6d9c8; }
+    @media (max-width: 920px) { .cols-2, .cols-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+      header, main { padding-left: 16px; padding-right: 16px; }
+      table { font-size: 13px; }
+      th, td { padding: 9px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Adversarial UX and Docs Audit</h1>
+    <p class="method">Manual emulation of an adversarial workflow because no slash-command workflow tool was available. Passes: UI reality check, documentation reality check, UX/docs mismatch, skeptical user, maintainer, and opportunity synthesis.</p>
+    <div class="meta">
+      <span class="pill">Generated: 2026-06-21T04:19:39Z</span>
+      <span class="pill">Audience: programmer/maintainer</span>
+      <span class="pill">Primary dimension: usability</span>
+      <span class="pill">No product/docs edits</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid cols-3">
+      <div class="dark-card pass">
+        <h3>Red-Team Critique 1</h3>
+        <p>The product says "Don't pick where. Pick the feeling", but the implemented experience still behaves like a long form before discovery. This undercuts the core thesis.</p>
+      </div>
+      <div class="dark-card pass">
+        <h3>Red-Team Critique 2</h3>
+        <p>The app asks for many inputs that do not influence matching. This makes the UI feel slower and can break trust once the maintainer notices the scoring code.</p>
+      </div>
+      <div class="dark-card pass">
+        <h3>Red-Team Critique 3</h3>
+        <p>The docs describe three products at once: original 2019 UI, current Next prototype, and target Drift/feed MVP. They need explicit labels or future work will drift.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Failure Modes by Journey</h2>
+      <table>
+        <tr><th>Journey</th><th>Failure mode</th><th>User consequence</th><th>Recommended next action</th></tr>
+        <tr>
+          <td>Landing to wizard</td>
+          <td>Brand promise is low-friction, but Step 1 has eight filter/input groups and scrolls far beyond one mobile viewport.</td>
+          <td>User feels the experience is longer than advertised before seeing any trip.</td>
+          <td>Show a trip/feed immediately or ask only origin, budget, days, and vibe.</td>
+        </tr>
+        <tr>
+          <td>Wizard to results</td>
+          <td>Defaults allow zero-choice completion, and several visible fields do not affect ranking.</td>
+          <td>User may think the app personalized a trip when it mostly used default beach/nightlife/hot preferences.</td>
+          <td>Use empty/optional defaults, explain ranking, and wire or hide non-ranking fields.</td>
+        </tr>
+        <tr>
+          <td>Results browsing</td>
+          <td>Cards say "Best match" and "Great deal" with percentage discounts and scarcity but no "why" or freshness.</td>
+          <td>Skeptical users distrust the deal quality and price claims.</td>
+          <td>Add freshness, source, match reasons, and "price seen" language from architecture docs.</td>
+        </tr>
+        <tr>
+          <td>Detail customization</td>
+          <td>Edit cycles options but does not explain constraints; activity swap button has no handler.</td>
+          <td>Customization feels fake when interactions are shallow.</td>
+          <td>Rename prototype controls or implement real option pickers.</td>
+        </tr>
+        <tr>
+          <td>Provider handoff</td>
+          <td>Continue to Expedia does not continue to Expedia.</td>
+          <td>This is the fastest way to break trust in a booking-adjacent product.</td>
+          <td>Either add real affiliate/deep links or label the flow as "save mock trip".</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Claims Audit</h2>
+      <table>
+        <tr><th>Claim made by UI/docs</th><th>Support level</th><th>Evidence</th><th>Fix</th></tr>
+        <tr>
+          <td>"Matched to your vibe and budget"</td>
+          <td><span class="badge sev-high">Partially unsupported</span></td>
+          <td>Ranking uses <code>general</code>, <code>weather</code>, and <code>intensity</code> only. See <code>src/lib/usePlanner.ts:155-166</code>. Budget is displayed but not used in ranking.</td>
+          <td>Use budget and days in score, or change copy to "Matched to your vibe".</td>
+        </tr>
+        <tr>
+          <td>"Your selections carry over" to Expedia</td>
+          <td><span class="badge sev-critical">Unsupported</span></td>
+          <td>Confirm catches save errors, sets saving false, and calls <code>go("detail")</code>; no <code>window.open</code> or provider URL. See <code>src/components/screens/HandoffSheet.tsx:47-52</code>.</td>
+          <td>Add real provider URL fields and click-out, or remove the claim.</td>
+        </tr>
+        <tr>
+          <td>"1,240 trips matched this week"</td>
+          <td><span class="badge sev-high">Simulated</span></td>
+          <td>Hard-coded in landing and brand rail. See <code>src/components/screens/Landing.tsx:55-58</code> and <code>src/components/BrandRail.tsx:77-80</code>.</td>
+          <td>Label as prototype/demo or derive from real inventory later.</td>
+        </tr>
+        <tr>
+          <td>Docs: main interface should be a live feed.</td>
+          <td><span class="badge sev-med">Target, not current</span></td>
+          <td><code>docs/wiki/arquitectura-mvp.md:11-14</code> says the frontend optimizes for scrolling, saving, sharing, alerts, and click-out. Current app is wizard-first.</td>
+          <td>Add "target product" label and a build plan from current wizard to feed.</td>
+        </tr>
+        <tr>
+          <td>README: screen flow and source map.</td>
+          <td><span class="badge sev-med">Stale</span></td>
+          <td><code>README.md:55-70</code> references old paths/components including <code>app/</code>, <code>lib/theme.ts</code>, <code>PhoneFrame.tsx</code>. Current files live under <code>src/</code>.</td>
+          <td>Update source map and mark prototype caveats.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Evidence Table</h2>
+      <table>
+        <tr><th>Finding</th><th>Evidence</th><th>Confidence</th></tr>
+        <tr>
+          <td>Step 1 is the main usability bottleneck.</td>
+          <td>Browser snapshot at 390x844 measured wizard Step 1 content at 1,238px plus bottom bar. Code sections: <code>src/components/screens/Wizard.tsx:99-219</code>.</td>
+          <td class="confidence">High</td>
+        </tr>
+        <tr>
+          <td>Optional filters should be optional in the UI, not preselected by default.</td>
+          <td>Initial state preselects packages, vacation types, traveler type, general preferences, and weather: <code>src/lib/usePlanner.ts:39-57</code>.</td>
+          <td class="confidence">High</td>
+        </tr>
+        <tr>
+          <td>Days available is missing despite being a target-product concept.</td>
+          <td><code>docs/wiki/prototipo-drift.md:34-42</code> calls for days available; <code>src/lib/data.ts:38</code> only has broad "When" chips.</td>
+          <td class="confidence">High</td>
+        </tr>
+        <tr>
+          <td>Current detail dates are hard-coded and can conflict with trip nights.</td>
+          <td>Flight dates show <code>Jul 2</code> and <code>Jul 5</code> regardless of destination. See <code>src/components/screens/Detail.tsx:86-94</code>.</td>
+          <td class="confidence">High</td>
+        </tr>
+        <tr>
+          <td>Favorite/saved filter/alert ideas are not present in the data model.</td>
+          <td>Convex schema only defines <code>trips</code>, indexed by user/guest: <code>convex/schema.ts:11-26</code>. Mutations only save/list/claim trips: <code>convex/trips.ts:18-80</code>.</td>
+          <td class="confidence">High</td>
+        </tr>
+        <tr>
+          <td>Docs overstate current app surface.</td>
+          <td><code>docs/flujo-app-ui.md:16-23</code> lists global nav pages not implemented in the current app; <code>docs/flujo-app-ui.md:120-123</code> describes About/Contact pages.</td>
+          <td class="confidence">High</td>
+        </tr>
+        <tr>
+          <td>Graphify is useful but stale.</td>
+          <td>Graph built at <code>af0d988e</code>; HEAD was <code>631001d8</code>. Update failed with 401 invalid OpenAI API key during semantic extraction.</td>
+          <td class="confidence">High</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>What Would Break Trust?</h2>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Booking-adjacent claims without booking behavior</h3>
+          <p>Provider handoff copy is currently ahead of implementation. In travel, this is more damaging than ordinary UI polish debt because users expect prices, availability, and provider links to be precise.</p>
+          <p class="quote">Next action: build real click-out or make the CTA explicitly prototype-only.</p>
+        </div>
+        <div class="card">
+          <h3>Artificial scarcity and savings</h3>
+          <p>"Seats left", percentage discounts, ratings, "matched this week", and scanning copy are all powerful persuasion mechanisms. Until backed by data, they should read as demo content.</p>
+          <p class="quote">Next action: replace with "sample data" in dev or add real observed_at/source fields.</p>
+        </div>
+        <div class="card">
+          <h3>Hidden mismatch between effort and outcome</h3>
+          <p>Asking for filters that do not affect results teaches the user to distrust personalization.</p>
+          <p class="quote">Next action: every visible input must affect ranking, detail, or saved-filter behavior.</p>
+        </div>
+        <div class="card">
+          <h3>Docs that do not tell maintainers what is real</h3>
+          <p>The docs are valuable, but they mix original design, future strategy, and current implementation. A maintainer could build the wrong next thing from the wrong source.</p>
+          <p class="quote">Next action: add current/target labels and a "source of truth by task" section.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>What Would Confuse a Maintainer?</h2>
+      <table>
+        <tr><th>Confusion</th><th>Why it slows iteration</th><th>Fix</th></tr>
+        <tr><td>README paths do not match <code>src/</code>.</td><td>Maintainer wastes time looking for removed files.</td><td>Update key files map.</td></tr>
+        <tr><td>Flow docs describe original screens as if canonical.</td><td>Maintainer may implement About/Contact/Checkout before the discovery MVP.</td><td>Label original design flow and add current app flow.</td></tr>
+        <tr><td>Graphify stale after UI/photo changes.</td><td>Graph queries can miss current implementation details.</td><td>Fix local Graphify API key config and rerun deep update.</td></tr>
+        <tr><td>Scoring ignores many UI fields.</td><td>Maintainer may add more filters without realizing ranking debt.</td><td>Document a ranking contract next to <code>usePlanner</code>.</td></tr>
+        <tr><td>Affiliation vs checkout language is inconsistent.</td><td>Maintainer may accidentally build a checkout mental model.</td><td>Standardize CTA language: "View offer", "Reserve with provider", never internal checkout until strategy changes.</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Unanswered Questions for the User</h2>
+      <div class="grid cols-2">
+        <div class="dark-card">
+          <h3>Product Priority</h3>
+          <p>Should the next build optimize for "I can personally use this weekly" or for showing a polished demo to others?</p>
+        </div>
+        <div class="dark-card">
+          <h3>Discovery Mode</h3>
+          <p>Should StumbleUpon-style browsing become the primary entry, or live alongside the current wizard as "Surprise me now"?</p>
+        </div>
+        <div class="dark-card">
+          <h3>Notification Scope</h3>
+          <p>Do saved filters notify by email only, in-app only, or both?</p>
+        </div>
+        <div class="dark-card">
+          <h3>AI Role</h3>
+          <p>Should AI generate destination narratives, explain why a deal matches, or actively research trips from live sources?</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Risk Register</h2>
+      <table class="risk-register">
+        <tr><th>Risk</th><th>Severity</th><th>Likelihood</th><th>Evidence</th><th>Recommended next action</th></tr>
+        <tr>
+          <td>Provider handoff is not real</td>
+          <td><span class="badge sev-critical">Critical</span></td>
+          <td>High</td>
+          <td><code>HandoffSheet.tsx:47-52</code></td>
+          <td>Implement affiliate URL/click-out or rename CTA before user testing.</td>
+        </tr>
+        <tr>
+          <td>Long form suppresses discovery habit</td>
+          <td><span class="badge sev-high">High</span></td>
+          <td>High</td>
+          <td>Step 1 content height 1,238px; <code>Wizard.tsx:99-219</code></td>
+          <td>Collapse optional filters; test one-card discovery entry.</td>
+        </tr>
+        <tr>
+          <td>Personalization claims exceed scoring logic</td>
+          <td><span class="badge sev-high">High</span></td>
+          <td>High</td>
+          <td><code>usePlanner.ts:155-166</code></td>
+          <td>Add match reasons and include budget/days/packages in scoring.</td>
+        </tr>
+        <tr>
+          <td>Docs guide next work toward stale surfaces</td>
+          <td><span class="badge sev-med">Medium</span></td>
+          <td>High</td>
+          <td><code>docs/flujo-app-ui.md:16-23</code>, <code>README.md:55-70</code></td>
+          <td>Current vs target documentation split.</td>
+        </tr>
+        <tr>
+          <td>No habit loop despite business thesis</td>
+          <td><span class="badge sev-med">Medium</span></td>
+          <td>Medium</td>
+          <td><code>convex/schema.ts:11-26</code>, docs/business thesis habit metric at <code>docs/la-idea-de-negocio.md:95-99</code></td>
+          <td>Add favorites, saved filters, and notification data model.</td>
+        </tr>
+        <tr>
+          <td>Graphify stale or partially failed</td>
+          <td><span class="badge sev-low">Low</span></td>
+          <td>High until config fixed</td>
+          <td>Update failed with 401 invalid OpenAI API key.</td>
+          <td>Fix Graphify provider config and rebuild before architecture work.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Graphify Evidence and Limitations</h2>
+      <div class="card">
+        <p>Graphify was read and used. Existing graph report identified communities around App Shell, Wizard Step 1 Form Fields, 3-Step Preference Wizard, Trip Options/Results, Package Booking Flow, Drift prototype, roadmap, and business thesis. Queries were run for UI/docs/planning communities, UI/spec connector files, central product concepts, and weak/missing docs/spec/UI connections.</p>
+        <p>Update attempt: <code>graphify . --mode deep --update</code>. Result: failed semantic extraction with a 401 invalid OpenAI API key value. The graph stayed stale: built at commit <code>af0d988e</code> while current HEAD was <code>631001d8</code>. Because of that, graph insights were treated as directional and cross-checked manually against source, docs, git status, and browser snapshots.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

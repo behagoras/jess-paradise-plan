@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paradise Plan UI and Docs Improvement Spec</title>
+  <style>
+    :root {
+      --bg: #fbf5ec;
+      --panel: #fffaf2;
+      --card: #ffffff;
+      --ink: #211b14;
+      --muted: #75695e;
+      --line: #e7d9c7;
+      --accent: #f0542d;
+      --accent2: #eed350;
+      --palm: #1e8e5a;
+      --risk: #b9372f;
+      --blue: #2474a6;
+      --shadow: 0 18px 45px rgba(57, 40, 22, .10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: radial-gradient(circle at top left, #fff2d0 0, transparent 28rem), var(--bg);
+      font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      padding: 40px clamp(18px, 4vw, 56px) 26px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(240,84,45,.12), rgba(238,211,80,.16));
+    }
+    main { padding: 28px clamp(18px, 4vw, 56px) 56px; }
+    h1, h2, h3 { margin: 0; line-height: 1.08; }
+    h1 { max-width: 980px; font-size: clamp(34px, 5vw, 68px); letter-spacing: 0; }
+    h2 { margin-top: 34px; font-size: clamp(24px, 3vw, 36px); }
+    h3 { margin-bottom: 8px; font-size: 18px; }
+    p { margin: 8px 0 0; }
+    .meta { margin-top: 18px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill, .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .tag.high { background: #ffe5df; border-color: #f0b1a2; color: #8f271f; }
+    .tag.med { background: #fff4ca; border-color: #dfc45d; color: #5f4d00; }
+    .tag.low { background: #e8f5ec; border-color: #9acdab; color: #155a35; }
+    .grid { display: grid; gap: 16px; }
+    .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .quiet { box-shadow: none; background: rgba(255,255,255,.58); }
+    .summary { grid-template-columns: 1.05fr .95fr; align-items: stretch; }
+    .big-number {
+      display: inline-flex;
+      width: 34px;
+      height: 34px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      background: var(--accent);
+      color: white;
+      font-weight: 900;
+      margin-right: 8px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(80px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .node {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel);
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 750;
+      text-align: center;
+    }
+    .node.problem { border-color: #efaa9d; background: #fff0eb; }
+    .node.ok { border-color: #9acdab; background: #edf8f0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; overflow: hidden; border-radius: 10px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 11px 10px; text-align: left; vertical-align: top; }
+    th { background: #fff3df; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    code {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff8ed;
+      padding: 1px 5px;
+      font-size: 12px;
+    }
+    details { margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.62); }
+    summary { cursor: pointer; padding: 12px 14px; font-weight: 800; }
+    details > div { padding: 0 14px 14px; }
+    .evidence { color: var(--blue); font-weight: 700; }
+    .roadmap .card { border-left: 5px solid var(--accent); }
+    .cross { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cross div { border-radius: 9px; border: 1px solid var(--line); padding: 12px; background: #fff; }
+    .method { margin-top: 20px; max-width: 1000px; color: var(--muted); }
+    @media (max-width: 920px) {
+      .cols-2, .cols-3, .summary, .cross { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      header, main { padding-left: 16px; padding-right: 16px; }
+      .flow { grid-template-columns: 1fr; }
+      table { font-size: 13px; }
+      th, td { padding: 9px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>UI and Docs Improvement Spec</h1>
+    <p class="method">Adversarial usability review for the programmer/maintainer. Scope: all app flow and docs. User concern: the experience feels long. Recommendation style: concrete ideas to implement.</p>
+    <div class="meta">
+      <span class="pill">Generated: 2026-06-21T04:19:39Z</span>
+      <span class="pill">Repo: /Users/behar/git/people/jess/paradise-plan</span>
+      <span class="pill">Mode: report-only, no product/doc edits</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid summary">
+      <div class="card">
+        <h2>Executive Summary</h2>
+        <p>The highest-leverage move is to stop treating the wizard as the primary experience. The app's own docs argue for discovery-first: a live feed, vibe/budget/days filters, saved deals, alerts, and AI/editorial curation. The current UI still front-loads a long preference form before the user sees any trip.</p>
+        <table>
+          <tr><th>Priority</th><th>Improvement</th><th>Why it matters</th></tr>
+          <tr><td><span class="tag high">P0</span></td><td>Make filters optional and collapse Step 1 into a short intent composer.</td><td>Mobile Step 1 is 1,238px of content in an 844px viewport and asks for eight sections before value is shown.</td></tr>
+          <tr><td><span class="tag high">P0</span></td><td>Add "days you want to go" and use it in ranking.</td><td>The docs and roadmap center duration, but code only has rough "When" chips and fixed destination nights.</td></tr>
+          <tr><td><span class="tag high">P0</span></td><td>Make the match algorithm honest and explainable.</td><td>Ranking currently uses only general tags, weather, and intensity; budget, packages, vacation type, traveler type, and departure do not affect the result order.</td></tr>
+          <tr><td><span class="tag high">P0</span></td><td>Fix provider handoff truthfulness.</td><td>The UI promises Expedia carryover, but confirm only saves/soft-fails and returns to detail. No provider link exists yet.</td></tr>
+          <tr><td><span class="tag med">P1</span></td><td>Introduce favorites, saved filters, notifications, and email destinations as a discovery loop.</td><td>The business thesis measures habit before revenue; saved filters and alerts are the habit engine.</td></tr>
+          <tr><td><span class="tag med">P1</span></td><td>Prototype a StumbleUpon-style "next trip" mode.</td><td>It matches the user's idea and the docs' "feed vivo" thesis better than a multi-step form.</td></tr>
+          <tr><td><span class="tag med">P1</span></td><td>Refactor docs around "current app" vs "target product".</td><td>README, flow docs, and wiki now teach different mental models.</td></tr>
+        </table>
+      </div>
+
+      <div class="card quiet">
+        <h2>Current-State Map</h2>
+        <div class="flow">
+          <div class="node ok">Landing<br>Strong brand promise</div>
+          <div class="node problem">Wizard Step 1<br>Long, dense, default-heavy</div>
+          <div class="node">Wizard Step 2<br>Vibe filters</div>
+          <div class="node">Summary<br>Repeats defaults</div>
+          <div class="node problem">Generating<br>Simulated sourcing copy</div>
+          <div class="node problem">Results<br>Opaque matching</div>
+          <div class="node problem">Handoff<br>No real provider link</div>
+        </div>
+        <details open>
+          <summary>Browser evidence</summary>
+          <div>
+            <p>Rendered mobile at 390x844. Step 1 page content measured 1,238px plus bottom bar; Results page measured 1,503px. Initial navigation logged a missing <code>/favicon.ico</code> 404 and Clerk development-key warning. Desktop at 1440x900 showed a strong brand rail but sparse landing stage before the dense wizard.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <h2>Prioritized Backlog</h2>
+      <div class="grid cols-3">
+        <div class="card">
+          <h3><span class="big-number">1</span>Shorten Entry</h3>
+          <p><strong>Problem:</strong> Step 1 asks for departure, when, travelers, budget, package components, vacation type, traveler type, and intensity before the app proves value.</p>
+          <p><strong>Build:</strong> First screen inside the planner should ask only: origin, budget, days available, and one vibe. Put the rest behind "More filters".</p>
+          <p><span class="tag high">Impact high</span> <span class="tag med">Effort medium</span></p>
+          <p class="evidence">Evidence: src/components/screens/Wizard.tsx:99, 108, 117, 152, 173, 182, 191, 200.</p>
+        </div>
+        <div class="card">
+          <h3><span class="big-number">2</span>Use Days Available</h3>
+          <p><strong>Problem:</strong> The user's explicit idea and the docs both call for duration/days, but the product has only "Flexible/This summer/month" chips.</p>
+          <p><strong>Build:</strong> Add a "Days available" stepper or range, then score destinations by matching <code>Destination.nights</code> and surface "fits your 3-4 day window".</p>
+          <p><span class="tag high">Impact high</span> <span class="tag low">Effort low-med</span></p>
+          <p class="evidence">Evidence: docs/wiki/prototipo-drift.md:34-42, docs/wiki/arquitectura-mvp.md:116-118, src/lib/data.ts:11, 38.</p>
+        </div>
+        <div class="card">
+          <h3><span class="big-number">3</span>Explain the Match</h3>
+          <p><strong>Problem:</strong> Users select many inputs, but the ranking logic ignores most of them.</p>
+          <p><strong>Build:</strong> Show three reason chips per result: "Beach + Nightlife", "Hot weather", "3 nights fits". Either wire every visible input into scoring or hide inputs that do not matter yet.</p>
+          <p><span class="tag high">Impact high</span> <span class="tag med">Effort medium</span></p>
+          <p class="evidence">Evidence: src/lib/usePlanner.ts:155-166 ignores budget, packages, vacation, travelerTypes, departure; Wizard summary lists those fields at src/components/screens/Wizard.tsx:264-277.</p>
+        </div>
+        <div class="card">
+          <h3><span class="big-number">4</span>Make Handoff Real or Label It</h3>
+          <p><strong>Problem:</strong> "Continue to Expedia" and "Your selections carry over" are trust-critical claims. The code does not open Expedia or build a deep link.</p>
+          <p><strong>Build:</strong> For prototype: change CTA to "Save this mock trip". For product: add provider URL fields and open an affiliate/deep link with explicit "final price confirmed there".</p>
+          <p><span class="tag high">Impact high</span> <span class="tag low">Effort low-med</span></p>
+          <p class="evidence">Evidence: src/components/screens/HandoffSheet.tsx:47-52 and 76-95.</p>
+        </div>
+        <div class="card">
+          <h3><span class="big-number">5</span>Create the Discovery Loop</h3>
+          <p><strong>Problem:</strong> The app saves a handed-off trip, but there is no favorite trip, saved filter, alert, or email destination concept.</p>
+          <p><strong>Build:</strong> Add "Favorite" on result/detail cards, "Save this filter", "Notify me when trips like this appear", and a weekly email digest of destinations.</p>
+          <p><span class="tag med">Impact high</span> <span class="tag med">Effort medium-high</span></p>
+          <p class="evidence">Evidence: convex/schema.ts:11-26 only defines trips; convex/trips.ts:18-80 only save/list/claim trips.</p>
+        </div>
+        <div class="card">
+          <h3><span class="big-number">6</span>Prototype Stumble Mode</h3>
+          <p><strong>Problem:</strong> The current form is not the best test of the core thesis: "show me the best trip, I do not know where or when".</p>
+          <p><strong>Build:</strong> Add a "Surprise me now" card stack: Save, Not for me, Show another. Learn preferences implicitly and let explicit filters remain optional.</p>
+          <p><span class="tag med">Impact high</span> <span class="tag med">Effort medium</span></p>
+          <p class="evidence">Evidence: docs/la-idea-de-negocio.md:16-20, docs/wiki/tesis-y-vision.md:13-17, user input: "Tipo Stumbleupon".</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>UI Recommendations</h2>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Before: Form-First Funnel</h3>
+          <p>Landing sells ease. Wizard immediately asks the user to review many chips and sliders. Summary repeats default state. Only then does discovery happen.</p>
+          <ul>
+            <li>Keep: strong photography, clear tagline, provider-price caveat.</li>
+            <li>Change: make "Get started" open a short composer or live feed instead of full filter intake.</li>
+            <li>Risk: if all filters remain visible, the user may optimize the form rather than browse deals.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>After: Discovery-First Funnel</h3>
+          <p>First value is a trip card. The user can swipe/skip, favorite, save a filter, or open advanced filters only when needed.</p>
+          <ul>
+            <li>Primary controls: budget, days, vibe, origin.</li>
+            <li>Secondary controls: package components, traveler type, intensity, weather, month.</li>
+            <li>Trust layer: "price seen X hours ago", "why this matched", and provider confirmation language.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Documentation Recommendations</h2>
+      <table>
+        <tr><th>Doc issue</th><th>Evidence</th><th>Concrete restructure</th></tr>
+        <tr>
+          <td>README file map is stale after the source move and UI refactor.</td>
+          <td><code>README.md:55-70</code> still points to <code>app/</code>, <code>lib/theme.ts</code>, <code>PhoneFrame.tsx</code>, and screen folders that no longer match <code>src/</code>.</td>
+          <td>Split README into "Run current app", "Current source map", and "Prototype caveats". Update paths to <code>src/app</code>, <code>src/components/screens</code>, Tailwind/shadcn tokens, and real image assets.</td>
+        </tr>
+        <tr>
+          <td>Flow doc describes the original design, not the current app.</td>
+          <td><code>docs/flujo-app-ui.md:16-23</code> includes global nav/About/Contact/Checkout/Search; <code>docs/flujo-app-ui.md:89-118</code> includes calendar daily pricing and checkout. The current app is a single-screen state machine.</td>
+          <td>Rename it "Original design flow" or add a companion "Current implemented flow". Put mismatches in a checklist so maintainers know what is intentionally omitted.</td>
+        </tr>
+        <tr>
+          <td>Wiki target product conflicts with current UI.</td>
+          <td><code>docs/wiki/arquitectura-mvp.md:11-14</code> says the main interface is a live feed, not an empty search box. Current UI starts with a wizard.</td>
+          <td>Add a "Current prototype vs target MVP" page mapping wizard, feed, Drift, and Roadmap Corte 1 so the next implementation decision is obvious.</td>
+        </tr>
+        <tr>
+          <td>AI experience is described as future value but not framed as a buildable interface.</td>
+          <td><code>docs/wiki/prototipo-drift.md:115-117</code> identifies the "what do I do there?" block as the LLM differentiator.</td>
+          <td>Create a short AI experience spec: inputs, output blocks, confidence/freshness, moderation, and fallbacks. Keep it separate from provider sourcing.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>UI and Docs Cross-Links</h2>
+      <div class="cross">
+        <div>
+          <h3>UI says</h3>
+          <p>"Matched to your vibe and budget", "Scanning 1,240 trips", "Continue to Expedia", "Your selections carry over".</p>
+        </div>
+        <div>
+          <h3>Docs/code say</h3>
+          <p>Ranking ignores budget and several filters; trip catalog is static; provider handoff is not implemented; architecture docs require cached price freshness language.</p>
+        </div>
+        <div>
+          <h3>UI says</h3>
+          <p>Three-step preference wizard is the main path.</p>
+        </div>
+        <div>
+          <h3>Docs say</h3>
+          <p>The main product should be a feed vivo with vibe/budget/days filters and discovery before booking.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Decision Table</h2>
+      <table>
+        <tr><th>Decision</th><th>Type</th><th>Dependencies</th><th>Risk</th><th>Next action</th></tr>
+        <tr><td>Collapse wizard Step 1 and make filters optional.</td><td>Quick win</td><td>Wizard state and UI copy</td><td>Defaults may need new empty states.</td><td>Convert package/vacation/traveler/weather/intensity into an advanced panel.</td></tr>
+        <tr><td>Add days available.</td><td>Quick win</td><td><code>PlannerState</code>, <code>Destination.nights</code>, summary rows</td><td>Must avoid pretending exact flight dates.</td><td>Add day range control and "fits your stay length" reason chip.</td></tr>
+        <tr><td>Favorite trips and saved filters.</td><td>Strategic bet</td><td>Convex schema, auth/guest ownership, UI affordances</td><td>Notification expectations increase.</td><td>Add <code>favorites</code> and <code>savedFilters</code> tables before email.</td></tr>
+        <tr><td>Notification/email destinations.</td><td>Strategic bet</td><td>Saved filters, deal ingestion freshness, email provider</td><td>Spam and stale-price trust.</td><td>Start with manual weekly digest preview, then automate.</td></tr>
+        <tr><td>StumbleUpon-style discovery.</td><td>Strategic bet</td><td>Result card actions and ranking feedback</td><td>Can hide useful controls if too playful.</td><td>Prototype Save / Skip / Why this buttons on one card at a time.</td></tr>
+        <tr><td>Research AI experience.</td><td>Strategic bet</td><td>Editorial schema, LLM prompt/eval, source attribution</td><td>Hallucinated activities or outdated info.</td><td>Define "what do I do there?" output contract and test against current destinations.</td></tr>
+      </table>
+    </section>
+
+    <section class="roadmap">
+      <h2>Implementation Roadmap</h2>
+      <div class="grid cols-3">
+        <div class="card">
+          <h3>Week 1: Honesty and Length</h3>
+          <p>Fix README source map, add favicon, change simulated sourcing/handoff copy, add match reason chips, and hide nonessential filters behind "Advanced".</p>
+        </div>
+        <div class="card">
+          <h3>Week 2: Discovery Inputs</h3>
+          <p>Add days available, make filters optional by default, wire budget/days/package choices into scoring or remove them from the promise.</p>
+        </div>
+        <div class="card">
+          <h3>Weeks 3-4: Habit Loop</h3>
+          <p>Add favorite trips, saved filters, notification opt-in, email destination digest, and a StumbleUpon-style discovery prototype.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Graphify Evidence</h2>
+      <div class="card">
+        <p>Graphify instructions were read from <code>.codex/skills/graphify/SKILL.md</code>. Existing graph was inspected at <code>graphify-out/GRAPH_REPORT.md</code> and <code>graphify-out/graph.json</code>. The graph reported 1,222 nodes, 1,564 links, and communities for App Shell, Wizard Step 1, Trip Options/Results, Package Booking Flow, Drift prototype, roadmap, and business thesis.</p>
+        <p>The graph was stale: <code>graphify-out/graph.json</code> was built at commit <code>af0d988e</code>; current HEAD was <code>631001d8</code>. Attempted command <code>graphify . --mode deep --update</code> failed because semantic extraction used an invalid OpenAI API key value, returning 401. Existing graph queries still informed the map of communities and product concepts, but all material findings were cross-checked against source files and browser snapshots.</p>
+        <p>Queries used: major UI/docs/planning communities; UI-to-doc/spec connector files; central product experience concepts; weak/missing docs/spec/UI connections.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
