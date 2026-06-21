@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-export const GUEST_COOKIE = "pp_guest";
+import { GUEST_COOKIE } from "@/lib/constants";
 
 /**
  * Reads the pp_guest token the middleware set. Falls back to minting one

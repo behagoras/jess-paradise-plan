@@ -1,7 +1,6 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
-export const GUEST_COOKIE = "pp_guest";
+import { GUEST_COOKIE } from "@/lib/constants";
 
 // Issue a guest token on first visit so anonymous draft trips can be saved to
 // Convex before the visitor signs in. Readable by JS (not httpOnly) because the
