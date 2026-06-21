@@ -10,7 +10,7 @@
     },
     "3xx-ui": {
       "description": "UI, styling, responsive, and design-system prompts",
-      "next": 303
+      "next": 304
     }
   }
 }
