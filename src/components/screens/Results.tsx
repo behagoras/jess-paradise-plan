@@ -3,6 +3,10 @@
 import { DEST_BASE } from "@/lib/data";
 import { fmt, type PlannerApi } from "@/lib/usePlanner";
 import { ImageSlot } from "../ImageSlot";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export function Results({ planner }: { planner: PlannerApi }) {
   const { computed, go, patch, scrollTop } = planner;
@@ -20,265 +24,118 @@ export function Results({ planner }: { planner: PlannerApi }) {
   };
 
   return (
-    <div data-screen-label="Results" style={{ padding: "6px 22px 130px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-          padding: "10px 0 6px",
-        }}
-      >
+    <div data-screen-label="Results" className="px-5 pt-1.5 pb-8 sm:px-7">
+      <div className="flex items-center gap-3.5 pb-1.5 pt-2.5">
         <button
           onClick={() => go("wizard")}
-          style={{
-            flex: "0 0 38px",
-            height: 38,
-            borderRadius: 11,
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-            color: "var(--ink)",
-            fontSize: 18,
-            cursor: "pointer",
-          }}
+          aria-label="Back"
+          className="h-[38px] flex-none cursor-pointer rounded-[11px] border border-line bg-card px-3 text-lg text-ink"
         >
           ←
         </button>
         <div>
-          <div
-            style={{
-              fontFamily: "var(--fd)",
-              fontWeight: 800,
-              fontSize: 21,
-              letterSpacing: "-.01em",
-            }}
-          >
+          <div className="font-display text-[21px] font-extrabold tracking-[-.01em]">
             {options.length} surprise trips
           </div>
-          <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>
+          <div className="text-[13px] text-ink-soft">
             Matched to your vibe and budget
           </div>
         </div>
       </div>
 
-      {options.map((o, i) => {
-        const b = DEST_BASE[o.key];
-        const from = Math.round(b * (1 - disc));
-        const best = i === 0;
-        return (
-          <div
-            key={o.key}
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--line)",
-              borderRadius: 24,
-              overflow: "hidden",
-              marginTop: 16,
-              boxShadow: "0 12px 28px -20px rgba(40,28,16,.5)",
-            }}
-          >
-            <div style={{ position: "relative", height: 188, background: o.gradient }}>
-              <ImageSlot placeholder={o.slotHint} />
+      <div className="grid gap-4 pt-2 lg:grid-cols-2 xl:grid-cols-3">
+        {options.map((o, i) => {
+          const b = DEST_BASE[o.key];
+          const from = Math.round(b * (1 - disc));
+          const best = i === 0;
+          return (
+            <Card
+              key={o.key}
+              className="gap-0 overflow-hidden rounded-[24px] border-line py-0 shadow-[0_12px_28px_-20px_rgba(40,28,16,.5)]"
+            >
               <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to top,rgba(20,12,6,.62),rgba(20,12,6,0) 55%)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: 13,
-                  left: 13,
-                  display: "flex",
-                  gap: 7,
-                  pointerEvents: "none",
-                }}
+                className="relative h-[188px]"
+                style={{ background: o.gradient }}
               >
-                <span
-                  style={{
-                    background: best ? "var(--accent)" : "rgba(255,255,255,.92)",
-                    color: best ? "var(--accent-ink)" : "var(--ink)",
-                    fontWeight: 800,
-                    fontSize: 11.5,
-                    padding: "6px 11px",
-                    borderRadius: 999,
-                  }}
-                >
-                  {best ? "Best match" : "Great deal"}
-                </span>
-                <span
-                  style={{
-                    background: "rgba(255,255,255,.92)",
-                    color: "var(--ink)",
-                    fontWeight: 800,
-                    fontSize: 11.5,
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                  }}
-                >
-                  −{Math.round(disc * 100)}%
-                </span>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 13,
-                  left: 15,
-                  right: 15,
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  pointerEvents: "none",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      color: "#fff",
-                      fontFamily: "var(--fd)",
-                      fontWeight: 800,
-                      fontSize: 23,
-                      textShadow: "0 2px 12px rgba(0,0,0,.4)",
-                    }}
-                  >
-                    {o.name}
-                  </div>
-                  <div
-                    style={{
-                      color: "rgba(255,255,255,.92)",
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      textShadow: "0 1px 6px rgba(0,0,0,.5)",
-                    }}
-                  >
-                    {o.region}
-                  </div>
-                </div>
+                <ImageSlot placeholder={o.slotHint} />
                 <div
+                  className="pointer-events-none absolute inset-0"
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    background: "rgba(255,255,255,.92)",
-                    padding: "5px 9px",
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: "var(--ink)",
+                    background:
+                      "linear-gradient(to top,rgba(20,12,6,.62),rgba(20,12,6,0) 55%)",
                   }}
-                >
-                  <span style={{ color: "var(--star)" }}>★</span>
-                  {o.rating}
-                </div>
-              </div>
-            </div>
-            <div style={{ padding: "15px 17px 17px" }}>
-              <p
-                style={{
-                  margin: "0 0 13px",
-                  fontSize: 14,
-                  lineHeight: 1.45,
-                  color: "var(--ink)",
-                }}
-              >
-                {o.blurb}
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                  marginBottom: 15,
-                }}
-              >
-                <Row icon="✈" label="Flight" value={o.airline} />
-                <Row icon="⌂" label="Stay" value={o.hotel} />
-                <Row icon="♪" label="Do" value={o.activity} />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingTop: 13,
-                  borderTop: "1px solid var(--line)",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--ink-soft)",
-                      fontWeight: 700,
-                    }}
+                />
+                <div className="pointer-events-none absolute left-[13px] top-[13px] flex gap-[7px]">
+                  <Badge
+                    className={
+                      "rounded-full px-[11px] py-1.5 text-[11.5px] font-extrabold " +
+                      (best
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-white/90 text-ink")
+                    }
                   >
-                    Departs in {o.departsIn} days · {o.seats} seats left
+                    {best ? "Best match" : "Great deal"}
+                  </Badge>
+                  <Badge className="rounded-full bg-white/90 px-2.5 py-1.5 text-[11.5px] font-extrabold text-ink">
+                    −{Math.round(disc * 100)}%
+                  </Badge>
+                </div>
+                <div className="pointer-events-none absolute inset-x-[15px] bottom-[13px] flex items-end justify-between">
+                  <div>
+                    <div className="font-display text-[23px] font-extrabold text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]">
+                      {o.name}
+                    </div>
+                    <div className="text-[12.5px] font-semibold text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">
+                      {o.region}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "var(--ink-soft)",
-                        textDecoration: "line-through",
-                      }}
-                    >
-                      {fmt(b)}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--fd)",
-                        fontWeight: 800,
-                        fontSize: 21,
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {fmt(from)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: "var(--ink-soft)",
-                        fontWeight: 600,
-                      }}
-                    >
-                      /person
-                    </span>
+                  <div className="flex items-center gap-1 rounded-full bg-white/90 px-[9px] py-[5px] text-xs font-extrabold text-ink">
+                    <span className="text-star">★</span>
+                    {o.rating}
                   </div>
                 </div>
-                <button
-                  onClick={() => select(i)}
-                  style={{
-                    border: "none",
-                    background: "var(--accent)",
-                    color: "var(--accent-ink)",
-                    fontWeight: 800,
-                    fontSize: 14,
-                    padding: "12px 20px",
-                    borderRadius: 13,
-                    cursor: "pointer",
-                  }}
-                >
-                  Select
-                </button>
               </div>
-            </div>
-          </div>
-        );
-      })}
+              <div className="flex flex-1 flex-col px-[17px] pb-[17px] pt-[15px]">
+                <p className="mb-[13px] text-sm leading-[1.45] text-ink">
+                  {o.blurb}
+                </p>
+                <div className="mb-[15px] flex flex-col gap-2">
+                  <Row icon="✈" label="Flight" value={o.airline} />
+                  <Row icon="⌂" label="Stay" value={o.hotel} />
+                  <Row icon="♪" label="Do" value={o.activity} />
+                </div>
+                <Separator className="mt-auto bg-line" />
+                <div className="flex items-center justify-between pt-[13px]">
+                  <div>
+                    <div className="text-[11px] font-bold text-ink-soft">
+                      Departs in {o.departsIn} days · {o.seats} seats left
+                    </div>
+                    <div className="flex items-baseline gap-[7px]">
+                      <span className="text-xs text-ink-soft line-through">
+                        {fmt(b)}
+                      </span>
+                      <span className="font-display text-[21px] font-extrabold text-ink">
+                        {fmt(from)}
+                      </span>
+                      <span className="text-[11px] font-semibold text-ink-soft">
+                        /person
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => select(i)}
+                    className="h-auto rounded-[13px] px-5 py-3 text-sm font-extrabold"
+                  >
+                    Select
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
 
-      <div
-        style={{
-          textAlign: "center",
-          color: "var(--ink-soft)",
-          fontSize: 12,
-          marginTop: 20,
-          lineHeight: 1.5,
-        }}
-      >
+      <div className="mt-5 text-center text-xs leading-[1.5] text-ink-soft">
         Prices shown are &quot;from&quot; estimates.
         <br />
         Final price is confirmed on the provider&apos;s site.
@@ -287,14 +144,20 @@ export function Results({ planner }: { planner: PlannerApi }) {
   );
 }
 
-function Row({ icon, label, value }: { icon: string; label: string; value: string }) {
+function Row({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
-      <span style={{ flex: "0 0 22px", color: "var(--accent)" }}>{icon}</span>
-      <span style={{ color: "var(--ink-soft)" }}>{label}</span>
-      <span style={{ fontWeight: 700, marginLeft: "auto", textAlign: "right" }}>
-        {value}
-      </span>
+    <div className="flex items-center gap-2.5 text-[13px]">
+      <span className="flex-none basis-[22px] text-primary">{icon}</span>
+      <span className="text-ink-soft">{label}</span>
+      <span className="ml-auto text-right font-bold">{value}</span>
     </div>
   );
 }

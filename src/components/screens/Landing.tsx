@@ -4,39 +4,27 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { HOW_IT_WORKS } from "@/lib/data";
 import { LogoLockup } from "../Logo";
 import { ImageSlot } from "../ImageSlot";
+import { Button } from "@/components/ui/button";
 import type { PlannerApi } from "@/lib/usePlanner";
 
 export function Landing({ planner }: { planner: PlannerApi }) {
   return (
     <div
       data-screen-label="Landing"
-      style={{ padding: "8px 22px 120px", animation: "pp-up .4s ease both" }}
+      className="animate-pp-up px-5 pt-2 pb-12 sm:px-7 sm:pt-4"
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 18,
-        }}
-      >
+      {/* Below lg the in-content brand + auth live here; on desktop the
+          persistent BrandRail and shell auth control take over. */}
+      <div className="mb-[18px] flex items-center justify-between lg:hidden">
         <LogoLockup />
         <SignedOut>
           <SignInButton mode="modal">
-            <button
-              style={{
-                border: "1.5px solid var(--line)",
-                background: "var(--surface)",
-                color: "var(--ink-soft)",
-                fontWeight: 700,
-                fontSize: 12,
-                padding: "8px 13px",
-                borderRadius: 999,
-                cursor: "pointer",
-              }}
+            <Button
+              variant="outline"
+              className="h-auto rounded-full border-[1.5px] border-line bg-card px-[13px] py-2 text-xs font-bold text-ink-soft"
             >
               Sign in
-            </button>
+            </Button>
           </SignInButton>
         </SignedOut>
         <SignedIn>
@@ -44,182 +32,69 @@ export function Landing({ planner }: { planner: PlannerApi }) {
         </SignedIn>
       </div>
 
+      {/* Hero. On desktop the rail carries the tagline + live badge, so here
+          the hero becomes a shorter image banner to avoid duplication. */}
       <div
+        className="relative h-[300px] overflow-hidden rounded-[28px] shadow-[0_18px_40px_-18px_rgba(240,84,45,.5)] sm:h-[360px] lg:mt-2 lg:h-[280px]"
         style={{
-          position: "relative",
-          borderRadius: 28,
-          overflow: "hidden",
-          height: 340,
           background: "linear-gradient(150deg,#F0876B,#F2B25A 45%,#2FC1C9)",
-          boxShadow: "0 18px 40px -18px rgba(240,84,45,.5)",
         }}
       >
         <ImageSlot placeholder="Drop a hero beach photo" />
         <div
+          className="pointer-events-none absolute inset-0"
           style={{
-            position: "absolute",
-            inset: 0,
             background:
               "linear-gradient(to top,rgba(20,12,6,.72) 6%,rgba(20,12,6,.12) 48%,rgba(20,12,6,.28))",
-            pointerEvents: "none",
           }}
         />
-        <div
-          style={{
-            position: "absolute",
-            left: 18,
-            top: 18,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 7,
-            background: "rgba(255,255,255,.92)",
-            padding: "7px 12px",
-            borderRadius: 999,
-            fontSize: 11.5,
-            fontWeight: 800,
-            color: "var(--ink)",
-            letterSpacing: ".02em",
-            pointerEvents: "none",
-          }}
-        >
-          <span
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "var(--accent)",
-              animation: "pp-pulse 1.6s infinite",
-            }}
-          />
+        <div className="pointer-events-none absolute left-[18px] top-[18px] inline-flex items-center gap-[7px] rounded-full bg-white/90 px-3 py-[7px] text-[11.5px] font-extrabold tracking-[.02em] text-ink lg:hidden">
+          <span className="animate-pp-pulse h-[7px] w-[7px] rounded-full bg-primary" />
           1,240 trips matched this week
         </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 22,
-            right: 22,
-            bottom: 22,
-            pointerEvents: "none",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "var(--fd)",
-              fontWeight: 800,
-              color: "#fff",
-              fontSize: 33,
-              lineHeight: 1.02,
-              letterSpacing: "-.01em",
-              textShadow: "0 2px 18px rgba(0,0,0,.35)",
-            }}
-          >
+        <div className="pointer-events-none absolute inset-x-[22px] bottom-[22px] lg:hidden">
+          <div className="font-display text-[33px] font-extrabold leading-[1.02] tracking-[-.01em] text-white [text-shadow:0_2px_18px_rgba(0,0,0,.35)] sm:text-[40px] lg:text-[52px]">
             Don&apos;t pick where.
             <br />
             Pick the feeling.
           </div>
-          <div
-            style={{
-              color: "rgba(255,255,255,.92)",
-              fontSize: 14.5,
-              marginTop: 9,
-              maxWidth: 280,
-              lineHeight: 1.4,
-              textShadow: "0 1px 8px rgba(0,0,0,.4)",
-            }}
-          >
+          <div className="mt-[9px] max-w-[280px] text-[14.5px] leading-[1.4] text-white/90 [text-shadow:0_1px_8px_rgba(0,0,0,.4)] sm:max-w-sm sm:text-base">
             Tell us your budget and your vibe. We hand you a trip, ready to book.
           </div>
         </div>
       </div>
 
-      <button
+      <Button
         onClick={planner.startWizard}
-        style={{
-          marginTop: 18,
-          width: "100%",
-          border: "none",
-          background: "var(--accent)",
-          color: "var(--accent-ink)",
-          fontFamily: "var(--fd)",
-          fontWeight: 800,
-          fontSize: 19,
-          letterSpacing: ".01em",
-          padding: 18,
-          borderRadius: 18,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          boxShadow: "0 12px 26px -10px var(--accent)",
-        }}
+        className="font-display mt-[18px] h-auto w-full gap-2.5 rounded-[18px] py-[18px] text-[19px] font-extrabold tracking-[.01em] shadow-[0_12px_26px_-10px_var(--accent)]"
       >
-        Get started <span style={{ fontSize: 21 }}>→</span>
-      </button>
+        Get started <span className="text-[21px]">→</span>
+      </Button>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          justifyContent: "center",
-          margin: "16px 0 22px",
-          color: "var(--ink-soft)",
-          fontSize: 12.5,
-          fontWeight: 600,
-        }}
-      >
-        <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+      <div className="my-[19px] flex items-center justify-center gap-2.5 text-[12.5px] font-semibold text-ink-soft">
+        <span className="h-px flex-1 bg-line" />
         how it works
-        <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+        <span className="h-px flex-1 bg-line" />
       </div>
 
-      {HOW_IT_WORKS.map((s) => (
-        <div
-          key={s.n}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 15,
-            background: "var(--surface)",
-            border: "1px solid var(--line)",
-            borderRadius: 18,
-            padding: "15px 17px",
-            marginBottom: 11,
-          }}
-        >
+      <div className="grid gap-[11px] lg:grid-cols-3">
+        {HOW_IT_WORKS.map((s) => (
           <div
-            style={{
-              flex: "0 0 40px",
-              height: 40,
-              borderRadius: 12,
-              background: "var(--surface2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "var(--fd)",
-              fontWeight: 800,
-              fontSize: 18,
-              color: "var(--accent)",
-            }}
+            key={s.n}
+            className="flex items-center gap-[15px] rounded-[18px] border border-line bg-card px-[17px] py-[15px]"
           >
-            {s.n}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>{s.title}</div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "var(--ink-soft)",
-                lineHeight: 1.35,
-                marginTop: 2,
-              }}
-            >
-              {s.body}
+            <div className="font-display flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-surface2 text-[18px] font-extrabold text-primary">
+              {s.n}
+            </div>
+            <div>
+              <div className="text-[15px] font-extrabold">{s.title}</div>
+              <div className="mt-0.5 text-[13px] leading-[1.35] text-ink-soft">
+                {s.body}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

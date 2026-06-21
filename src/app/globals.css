@@ -1,91 +1,211 @@
-/* Paradise Plan — global styles transcribed from the source helmet block. */
+/* Paradise Plan — Tailwind v4 + shadcn/ui, themed to the Paradise palette. */
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Paradise palette */
-  --bg: #fbf5ec;
-  --surface: #ffffff;
-  --surface2: #fbf3e9;
-  --ink: #211b14;
-  --ink-soft: #86796b;
-  --line: #ebe0d0;
-  --accent: #f0542d;
-  --accent-ink: #fff6f0;
-  --accent2: #eed350;
-  --accent2-ink: #2a2406;
-  --palm: #1e8e5a;
-  --star: #eab308;
-  --backdrop: #e7ddcd;
+  /* --- Paradise palette (source of truth, kept exactly) --------------- */
+  --pp-bg: #fbf5ec;
+  --pp-surface: #ffffff;
+  --pp-surface2: #fbf3e9;
+  --pp-ink: #211b14;
+  --pp-ink-soft: #86796b;
+  --pp-line: #ebe0d0;
+  --pp-accent: #f0542d;
+  --pp-accent-ink: #fff6f0;
+  --pp-accent2: #eed350;
+  --pp-accent2-ink: #2a2406;
+  --pp-palm: #1e8e5a;
+  --pp-star: #eab308;
+  --pp-backdrop: #e7ddcd;
+
+  /* Legacy aliases so any remaining var(--ink) etc. still resolve. */
+  --bg: var(--pp-bg);
+  --surface: var(--pp-surface);
+  --surface2: var(--pp-surface2);
+  --ink: var(--pp-ink);
+  --ink-soft: var(--pp-ink-soft);
+  --line: var(--pp-line);
+  --accent: var(--pp-accent);
+  --accent-ink: var(--pp-accent-ink);
+  --accent2: var(--pp-accent2);
+  --accent2-ink: var(--pp-accent2-ink);
+  --palm: var(--pp-palm);
+  --star: var(--pp-star);
+  --backdrop: var(--pp-backdrop);
+
   --fd: "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", system-ui,
     sans-serif;
   --fb: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* --- shadcn semantic tokens, mapped to Paradise --------------------- */
+  --background: var(--pp-bg);
+  --foreground: var(--pp-ink);
+  --card: var(--pp-surface);
+  --card-foreground: var(--pp-ink);
+  --popover: var(--pp-surface);
+  --popover-foreground: var(--pp-ink);
+  --primary: var(--pp-accent);
+  --primary-foreground: var(--pp-accent-ink);
+  --secondary: var(--pp-accent2);
+  --secondary-foreground: var(--pp-accent2-ink);
+  --muted: var(--pp-surface2);
+  --muted-foreground: var(--pp-ink-soft);
+  --accent: var(--pp-accent2);
+  --accent-foreground: var(--pp-accent2-ink);
+  --destructive: #d9483a;
+  --destructive-foreground: var(--pp-accent-ink);
+  --border: var(--pp-line);
+  --input: var(--pp-line);
+  --ring: var(--pp-accent);
+
+  /* Generous rounded corners — cards ~18px, buttons ~15px, base 0.95rem. */
+  --radius: 0.95rem;
 }
 
-* {
-  box-sizing: border-box;
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Extra Paradise-specific colors usable as Tailwind utilities. */
+  --color-surface2: var(--pp-surface2);
+  --color-ink: var(--pp-ink);
+  --color-ink-soft: var(--pp-ink-soft);
+  --color-line: var(--pp-line);
+  --color-accent2: var(--pp-accent2);
+  --color-accent2-ink: var(--pp-accent2-ink);
+  --color-accent-ink: var(--pp-accent-ink);
+  --color-palm: var(--pp-palm);
+  --color-star: var(--pp-star);
+  --color-backdrop: var(--pp-backdrop);
+
+  --font-sans: var(--fb);
+  --font-display: var(--fd);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+
+  --animate-pp-orbit: pp-orbit 2.4s linear infinite;
+  --animate-pp-float: pp-float 2.6s ease-in-out infinite;
+  --animate-pp-up: pp-up 0.4s ease both;
+  --animate-pp-pulse: pp-pulse 1.6s infinite;
+
+  @keyframes pp-orbit {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes pp-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-7px);
+    }
+  }
+  @keyframes pp-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes pp-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: var(--fb);
-  background: var(--backdrop);
-  color: var(--ink);
-}
-
-@keyframes pp-orbit {
-  from {
-    transform: rotate(0deg);
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
-  to {
-    transform: rotate(360deg);
+  html,
+  body {
+    margin: 0;
+    padding: 0;
   }
-}
-
-@keyframes pp-float {
-  0%,
-  100% {
-    transform: translateY(0);
+  body {
+    font-family: var(--fb);
+    background: var(--background);
+    color: var(--foreground);
   }
-  50% {
-    transform: translateY(-7px);
+  .font-display {
+    font-family: var(--fd);
   }
 }
 
-@keyframes pp-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pp-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
+/* Hidden-scrollbar utility (used by the app scroll container). */
 [data-scroll]::-webkit-scrollbar {
   width: 0;
   display: none;
 }
-
 [data-scroll] {
   scrollbar-width: none;
 }
 
-/* Range input styled to the accent across browsers */
-input[type="range"] {
-  accent-color: var(--accent);
+/* --- Desktop brand-rail scenery ------------------------------------- */
+/* Fractal-noise film grain so the rail gradient never reads as flat/AI. */
+.pp-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+/* A single plane drifting slowly across the rail, far in the distance. */
+@keyframes pp-drift {
+  0% {
+    transform: translate(-8vw, 6px) rotate(-4deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(42vw, -26px) rotate(-4deg);
+    opacity: 0;
+  }
+}
+.pp-drift {
+  animation: pp-drift 26s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-drift {
+    animation: none;
+    opacity: 0.6;
+  }
 }

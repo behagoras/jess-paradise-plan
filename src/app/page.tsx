@@ -1,8 +1,16 @@
 "use client";
 
 import { useRef } from "react";
+import {
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 import { usePlanner, fmt } from "@/lib/usePlanner";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { BrandRail } from "@/components/BrandRail";
 import { Landing } from "@/components/screens/Landing";
 import { Wizard } from "@/components/screens/Wizard";
 import { Generating } from "@/components/screens/Generating";
@@ -11,6 +19,10 @@ import { Detail } from "@/components/screens/Detail";
 import { HandoffSheet } from "@/components/screens/HandoffSheet";
 
 export default function Home() {
+  // The page-level scroll container. `usePlanner` resets its scrollTop on every
+  // screen change, replacing the old PhoneFrame inner scroll region. On desktop
+  // this same element becomes the right-hand content stage (flex-1) so the
+  // scroll reset keeps working in both layouts with no change to usePlanner.
   const scrollRef = useRef<HTMLDivElement>(null);
   const planner = usePlanner(scrollRef);
   const { state } = planner;
@@ -33,34 +45,67 @@ export default function Home() {
     }
   })();
 
+  const bottomBar =
+    state.screen === "wizard" ? (
+      <WizardBar planner={planner} />
+    ) : state.screen === "detail" ? (
+      <DetailBar planner={planner} />
+    ) : null;
+
+  // Desktop content width adapts to the screen: forms read best narrow, while
+  // the results grid and side-by-side detail want the extra room.
+  const stageMax =
+    state.screen === "results"
+      ? "lg:max-w-5xl"
+      : state.screen === "detail" || state.screen === "handoff"
+        ? "lg:max-w-4xl"
+        : "lg:max-w-2xl";
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        width: "100%",
-        background: "var(--backdrop)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        gap: 18,
-        padding: "30px 20px 44px",
-      }}
-    >
-      <PhoneFrame
-        scrollRef={scrollRef}
-        overlay={state.screen === "handoff" ? <HandoffSheet planner={planner} /> : null}
-        bottomBar={
-          state.screen === "wizard" ? (
-            <WizardBar planner={planner} />
-          ) : state.screen === "detail" ? (
-            <DetailBar planner={planner} />
-          ) : null
-        }
+    <div className="bg-backdrop lg:flex lg:h-[100dvh] lg:overflow-hidden">
+      {/* Persistent atmospheric brand rail — desktop only. */}
+      <BrandRail className="hidden lg:flex lg:w-[40%] lg:max-w-[600px] xl:w-[44%]" />
+
+      {/* Content stage / scroll container: full-bleed on mobile, a floating
+          card on tablet, the full-height right pane on desktop. */}
+      <div
+        ref={scrollRef}
+        data-scroll
+        className="relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-backdrop lg:flex-1 lg:bg-background"
       >
-        {body}
-      </PhoneFrame>
-    </main>
+        <div
+          className={cn(
+            "relative mx-auto min-h-[100dvh] w-full max-w-md bg-background text-foreground shadow-[0_0_60px_-30px_rgba(40,28,16,0.45)]",
+            "sm:my-6 sm:min-h-0 sm:max-w-lg sm:rounded-[28px]",
+            "lg:my-0 lg:min-h-[100dvh] lg:rounded-none lg:shadow-none",
+            stageMax,
+          )}
+        >
+          <main className={bottomBar ? "pb-28" : ""}>{body}</main>
+
+          {bottomBar}
+        </div>
+      </div>
+
+      {/* Persistent auth control, pinned over the stage on desktop. */}
+      <div className="fixed right-6 top-6 z-40 hidden lg:block">
+        <SignedOut>
+          <SignInButton mode="modal">
+            <Button
+              variant="outline"
+              className="h-auto rounded-full border-[1.5px] border-line bg-card/90 px-4 py-2 text-xs font-bold text-ink-soft shadow-sm backdrop-blur"
+            >
+              Sign in
+            </Button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+      </div>
+
+      {state.screen === "handoff" && <HandoffSheet planner={planner} />}
+    </div>
   );
 }
 
@@ -68,59 +113,35 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { state, nextStep } = planner;
   const isLast = state.step === 3;
   return (
-    <div
-      style={{
-        flex: "0 0 auto",
-        padding: "14px 22px calc(14px + env(safe-area-inset-bottom))",
-        background: "var(--surface)",
-        borderTop: "1px solid var(--line)",
-        display: "flex",
-        gap: 12,
-        alignItems: "center",
-      }}
-    >
-      <div style={{ flex: 1 }}>
-        {[1, 2, 3].map((n) => (
-          <span
-            key={n}
-            style={{
-              display: "inline-block",
-              width: n === state.step ? 22 : 8,
-              height: 8,
-              borderRadius: 5,
-              marginRight: 6,
-              background: n <= state.step ? "var(--accent)" : "var(--line)",
-              transition: "all .25s",
-            }}
-          />
-        ))}
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(14px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px] lg:rounded-none">
+      <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-3.5 sm:max-w-lg sm:px-6 lg:max-w-2xl">
+        <div className="flex-1">
+          {[1, 2, 3].map((n) => (
+            <span
+              key={n}
+              className="mr-1.5 inline-block h-2 rounded-[5px] transition-all duration-300"
+              style={{
+                width: n === state.step ? 22 : 8,
+                background: n <= state.step ? "var(--accent)" : "var(--line)",
+              }}
+            />
+          ))}
+        </div>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className={
+            "font-display h-auto gap-2 rounded-[15px] px-6 py-[15px] text-base font-extrabold " +
+            (isLast
+              ? "bg-accent2 text-accent2-ink shadow-[0_10px_22px_-10px_var(--accent2)] hover:bg-accent2/90"
+              : "")
+          }
+        >
+          {isLast && <span className="text-[19px] font-black">⌕</span>}
+          {isLast ? "Surprise me" : "Continue"}
+          {!isLast && <span className="text-[17px]">→</span>}
+        </Button>
       </div>
-      <button
-        onClick={nextStep}
-        style={{
-          border: "none",
-          fontFamily: "var(--fd)",
-          fontWeight: 800,
-          fontSize: 16,
-          padding: "15px 24px",
-          borderRadius: 15,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          ...(isLast
-            ? {
-                background: "var(--accent2)",
-                color: "var(--accent2-ink)",
-                boxShadow: "0 10px 22px -10px var(--accent2)",
-              }
-            : { background: "var(--accent)", color: "var(--accent-ink)" }),
-        }}
-      >
-        {isLast && <span style={{ fontSize: 19, fontWeight: 900 }}>⌕</span>}
-        {isLast ? "Surprise me" : "Continue"}
-        {!isLast && <span style={{ fontSize: 17 }}>→</span>}
-      </button>
     </div>
   );
 }
@@ -128,49 +149,21 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
 function DetailBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { computed, go } = planner;
   return (
-    <div
-      style={{
-        flex: "0 0 auto",
-        padding: "13px 22px calc(13px + env(safe-area-inset-bottom))",
-        background: "var(--surface)",
-        borderTop: "1px solid var(--line)",
-        display: "flex",
-        gap: 14,
-        alignItems: "center",
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 700 }}>
-          Total from
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(13px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px] lg:rounded-none">
+      <div className="mx-auto flex w-full max-w-md items-center gap-3.5 px-5 pt-3 sm:max-w-lg sm:px-6 lg:max-w-4xl">
+        <div>
+          <div className="text-[11px] font-bold text-ink-soft">Total from</div>
+          <div className="font-display text-xl font-extrabold text-ink">
+            {fmt(computed.grand)}
+          </div>
         </div>
-        <div
-          style={{
-            fontFamily: "var(--fd)",
-            fontWeight: 800,
-            fontSize: 20,
-            color: "var(--ink)",
-          }}
+        <Button
+          onClick={() => go("handoff")}
+          className="font-display h-auto flex-1 rounded-[15px] py-4 text-base font-extrabold"
         >
-          {fmt(computed.grand)}
-        </div>
+          Reserve with {computed.provider}
+        </Button>
       </div>
-      <button
-        onClick={() => go("handoff")}
-        style={{
-          flex: 1,
-          border: "none",
-          background: "var(--accent)",
-          color: "var(--accent-ink)",
-          fontFamily: "var(--fd)",
-          fontWeight: 800,
-          fontSize: 16,
-          padding: 16,
-          borderRadius: 15,
-          cursor: "pointer",
-        }}
-      >
-        Reserve with {computed.provider}
-      </button>
     </div>
   );
 }
