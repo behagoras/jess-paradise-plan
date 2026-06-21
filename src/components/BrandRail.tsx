@@ -1,10 +1,15 @@
 import { LogoMark, PlaneGlyph } from "./Logo";
 
-/** Trust stats shown at the foot of the rail. Decorative, desktop-only. */
+/**
+ * Honest descriptors shown at the foot of the rail. Decorative, desktop-only.
+ * These describe the actual prototype rather than inventing usage metrics.
+ * TODO(live-data): swap for real rating / savings / time once usage data and
+ * live pricing exist.
+ */
 const STATS: [string, string][] = [
-  ["4.9★", "traveler rating"],
-  ["−38%", "avg. savings"],
-  ["60s", "to a full trip"],
+  ["6", "curated destinations"],
+  ["3", "results per search"],
+  ["~", "all prices estimated"],
 ];
 
 /**
@@ -74,9 +79,9 @@ export function BrandRail({ className = "" }: { className?: string }) {
 
         {/* Hero pitch. */}
         <div className="max-w-[440px]">
+          {/* Honest tagline — no fake live "trips matched" counter or pulse. */}
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[12px] font-bold tracking-[.01em] ring-1 ring-white/25 backdrop-blur">
-            <span className="animate-pp-pulse h-[7px] w-[7px] rounded-full bg-white" />
-            1,240 trips matched this week
+            Surprise trips, tuned to your vibe
           </div>
           <h1 className="font-display text-[44px] font-extrabold leading-[0.98] tracking-[-.02em] [text-shadow:0_4px_30px_rgba(20,12,6,.35)] xl:text-[56px]">
             Don&apos;t pick where.

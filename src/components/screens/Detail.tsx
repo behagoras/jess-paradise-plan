@@ -24,6 +24,15 @@ export function Detail({ planner }: { planner: PlannerApi }) {
   const { dest, air, hot, actPrice, breakdown, grand, perPerson, travelersLabel } =
     computed;
 
+  // Honest, vague-but-true date labels derived from the chosen `when` — no
+  // calendar, no fake exact dates. Flexible stays flexible; a named month
+  // becomes "Early {Month}". Confirmed on the provider's site at booking.
+  // TODO(live-data): replace with real outbound/return dates once a live
+  // flight search returns itineraries.
+  const monthly = state.when !== "Flexible" && state.when !== "This summer";
+  const outLabel = monthly ? `Early ${state.when}` : "Outbound · Nonstop";
+  const retLabel = monthly ? `+${dest.nights} nights` : "Return · Nonstop";
+
   return (
     <div data-screen-label="Package detail" className="pb-8">
       <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:px-7 lg:pt-6">
@@ -83,14 +92,14 @@ export function Detail({ planner }: { planner: PlannerApi }) {
                   <div className="font-display text-base font-extrabold">
                     {dest.from}
                   </div>
-                  <div className="text-[11px] text-ink-soft">Jul 2</div>
+                  <div className="text-[11px] text-ink-soft">{outLabel}</div>
                 </div>
                 <div className="text-xs tracking-[1px] text-ink-soft">•—✈—•</div>
                 <div className="text-center">
                   <div className="font-display text-base font-extrabold">
                     {dest.to}
                   </div>
-                  <div className="text-[11px] text-ink-soft">Jul 5</div>
+                  <div className="text-[11px] text-ink-soft">{retLabel}</div>
                 </div>
               </div>
               <div className="text-[15px] font-extrabold">{fmt(air.price)}</div>
@@ -129,7 +138,6 @@ export function Detail({ planner }: { planner: PlannerApi }) {
                     <span className="text-[17px] text-primary">♪</span>
                     {dest.activity}
                   </div>
-                  <EditButton>Swap</EditButton>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-[13px] text-ink-soft">{dest.actDesc}</div>

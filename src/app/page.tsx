@@ -7,7 +7,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
-import { usePlanner, fmt } from "@/lib/usePlanner";
+import { usePlanner, fmt, WIZARD_STEPS } from "@/lib/usePlanner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BrandRail } from "@/components/BrandRail";
@@ -18,6 +18,17 @@ import { Results } from "@/components/screens/Results";
 import { Detail } from "@/components/screens/Detail";
 import { HandoffSheet } from "@/components/screens/HandoffSheet";
 
+/**
+ * Screen registry — how to add a screen to this app:
+ *   1. Add the screen name to the `Screen` union in src/lib/usePlanner.ts.
+ *   2. Add a `case` to the `body` switch below mapping it to its component.
+ *   3. If it needs a bottom bar, add a branch to the `bottomBar` ternary and a
+ *      matching `*Bar` component (see WizardBar / DetailBar).
+ *   4. If it wants a different desktop width, add it to the `stageMax` ternary.
+ * Overlay screens (e.g. "handoff") render *outside* the stage as a sibling at
+ * the bottom of the tree — see the `state.screen === "handoff"` line — rather
+ * than as a `body` case, so they float over the current screen.
+ */
 export default function Home() {
   // The page-level scroll container. `usePlanner` resets its scrollTop on every
   // screen change, replacing the old PhoneFrame inner scroll region. On desktop
@@ -111,21 +122,35 @@ export default function Home() {
 
 function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { state, nextStep } = planner;
-  const isLast = state.step === 3;
+  const isLast = state.step === WIZARD_STEPS;
+  // One-line honest micro-summary of the inputs that actually drive output.
+  const summary = [
+    state.general.length ? state.general.join(", ") : "Any vibe",
+    state.weather.length ? state.weather.join("/") + " weather" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(14px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px] lg:rounded-none">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(14px+env(safe-area-inset-bottom))] sm:absolute sm:inset-x-0 sm:rounded-b-[28px] lg:rounded-none">
       <div className="mx-auto flex w-full max-w-md items-center gap-3 px-5 pt-3.5 sm:max-w-lg sm:px-6 lg:max-w-2xl">
-        <div className="flex-1">
-          {[1, 2, 3].map((n) => (
-            <span
-              key={n}
-              className="mr-1.5 inline-block h-2 rounded-[5px] transition-all duration-300"
-              style={{
-                width: n === state.step ? 22 : 8,
-                background: n <= state.step ? "var(--accent)" : "var(--line)",
-              }}
-            />
-          ))}
+        <div className="min-w-0 flex-1">
+          <div className="mb-1.5">
+            {Array.from({ length: WIZARD_STEPS }, (_, i) => i + 1).map((n) => (
+              <span
+                key={n}
+                className="mr-1.5 inline-block h-2 rounded-[5px] transition-all duration-300"
+                style={{
+                  width: n === state.step ? 22 : 8,
+                  background: n <= state.step ? "var(--accent)" : "var(--line)",
+                }}
+              />
+            ))}
+          </div>
+          {isLast && (
+            <div className="truncate text-[11px] font-semibold text-ink-soft">
+              {summary}
+            </div>
+          )}
         </div>
         <Button
           onClick={nextStep}
@@ -149,7 +174,7 @@ function WizardBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
 function DetailBar({ planner }: { planner: ReturnType<typeof usePlanner> }) {
   const { computed, go } = planner;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(13px+env(safe-area-inset-bottom))] sm:absolute sm:rounded-b-[28px] lg:rounded-none">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[calc(13px+env(safe-area-inset-bottom))] sm:absolute sm:inset-x-0 sm:rounded-b-[28px] lg:rounded-none">
       <div className="mx-auto flex w-full max-w-md items-center gap-3.5 px-5 pt-3 sm:max-w-lg sm:px-6 lg:max-w-4xl">
         <div>
           <div className="text-[11px] font-bold text-ink-soft">Total from</div>
