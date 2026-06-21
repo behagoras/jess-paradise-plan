@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useMutation } from "convex/react";
-import { Authenticated, Unauthenticated } from "convex/react";
-import { SignInButton } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { fmt, type PlannerApi } from "@/lib/usePlanner";
 import { PlaneGlyph } from "../Logo";
@@ -138,20 +136,9 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
           </span>
         </div>
 
-        <Authenticated>
-          <button
-            onClick={confirm}
-            disabled={saving}
-            style={primaryBtn}
-          >
-            {saving ? "Saving…" : `Continue to ${provider} →`}
-          </button>
-        </Authenticated>
-        <Unauthenticated>
-          <SignInButton mode="modal">
-            <button style={primaryBtn}>Sign in to continue →</button>
-          </SignInButton>
-        </Unauthenticated>
+        <button onClick={confirm} disabled={saving} style={primaryBtn}>
+          {saving ? "Saving…" : `Continue to ${provider} →`}
+        </button>
 
         <button
           onClick={() => close()}

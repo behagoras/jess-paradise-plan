@@ -1,13 +1,6 @@
 "use client";
 
 import { useRef } from "react";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
 import { usePlanner, fmt } from "@/lib/usePlanner";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Landing } from "@/components/screens/Landing";
@@ -54,56 +47,6 @@ export default function Home() {
         padding: "30px 20px 44px",
       }}
     >
-      <header
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 10,
-        }}
-      >
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button
-              style={{
-                border: "1px solid var(--line)",
-                background: "var(--surface)",
-                color: "var(--accent)",
-                fontFamily: "var(--fd)",
-                fontWeight: 700,
-                fontSize: 14,
-                padding: "9px 16px",
-                borderRadius: 12,
-                cursor: "pointer",
-              }}
-            >
-              Sign in
-            </button>
-          </SignInButton>
-          <SignUpButton mode="modal">
-            <button
-              style={{
-                border: "none",
-                background: "var(--accent)",
-                color: "var(--accent-ink)",
-                fontFamily: "var(--fd)",
-                fontWeight: 800,
-                fontSize: 14,
-                padding: "9px 16px",
-                borderRadius: 12,
-                cursor: "pointer",
-              }}
-            >
-              Sign up
-            </button>
-          </SignUpButton>
-        </SignedOut>
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-      </header>
       <PhoneFrame
         scrollRef={scrollRef}
         overlay={state.screen === "handoff" ? <HandoffSheet planner={planner} /> : null}

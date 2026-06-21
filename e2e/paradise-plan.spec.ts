@@ -39,9 +39,9 @@ test.describe("Paradise Plan — guest flow", () => {
     await page.goto("/");
     await planToHandoff(page);
 
-    // A signed-out visitor is asked to sign in before the trip is saved.
+    // The hand-off CTA is shown to everyone (no login gate), matching the design.
     await expect(
-      page.getByRole("button", { name: /Sign in to continue/ })
+      page.getByRole("button", { name: /Continue to Expedia/ })
     ).toBeVisible();
   });
 
@@ -73,8 +73,11 @@ test.describe("Paradise Plan — authenticated flow", () => {
     await setupClerkTestingToken({ page });
     await page.goto("/");
 
-    // Open the modal sign-in from the page header (not the in-frame one).
-    await page.locator("header").getByRole("button", { name: "Sign in" }).click();
+    // Open the modal sign-in from the in-frame "Sign in" pill on the landing.
+    await page
+      .getByRole("button", { name: "Sign in", exact: true })
+      .first()
+      .click();
 
     const dialog = page.getByRole("dialog");
     await dialog.locator('input[name="identifier"]').fill(USER!);
