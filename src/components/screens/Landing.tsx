@@ -40,7 +40,11 @@ export function Landing({ planner }: { planner: PlannerApi }) {
           background: "linear-gradient(150deg,#F0876B,#F2B25A 45%,#2FC1C9)",
         }}
       >
-        <ImageSlot placeholder="Drop a hero beach photo" />
+        <ImageSlot
+          src="/images/trips/hero-beach.webp"
+          placeholder="Drop a hero beach photo"
+          loading="eager"
+        />
         <div
           className="pointer-events-none absolute inset-0"
           style={{

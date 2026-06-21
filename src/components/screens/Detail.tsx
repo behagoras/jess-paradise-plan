@@ -32,7 +32,7 @@ export function Detail({ planner }: { planner: PlannerApi }) {
           className="relative h-[230px] lg:sticky lg:top-6 lg:h-[360px] lg:self-start lg:overflow-hidden lg:rounded-[24px]"
           style={{ background: dest.gradient }}
         >
-          <ImageSlot placeholder={dest.slotHint} />
+          <ImageSlot src={dest.imageSrc} placeholder={dest.slotHint} />
           <div
             className="pointer-events-none absolute inset-0"
             style={{

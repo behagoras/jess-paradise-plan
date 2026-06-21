@@ -1,16 +1,16 @@
 import type { CSSProperties } from "react";
 
-/**
- * Stand-in for the source `<image-slot>` custom element. In the design tool
- * this was a drop target for a real photo; here it renders the gradient that
- * sits behind it plus the placeholder hint, so the layout is faithful without
- * a CMS. Swap for next/image once real photography is wired in.
- */
 export function ImageSlot({
   placeholder,
+  src,
+  objectPosition = "center",
+  loading = "lazy",
   style,
 }: {
   placeholder?: string;
+  src?: string;
+  objectPosition?: CSSProperties["objectPosition"];
+  loading?: "eager" | "lazy";
   style?: CSSProperties;
 }) {
   return (
@@ -27,7 +27,21 @@ export function ImageSlot({
         ...style,
       }}
     >
-      {placeholder ? (
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          loading={loading}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition,
+          }}
+        />
+      ) : placeholder ? (
         <span
           style={{
             fontSize: 12,
