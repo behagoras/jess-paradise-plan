@@ -40,14 +40,21 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
       activityOn: state.activityOn,
     };
     try {
-      // Signed in → save under the user. Guest → save a draft keyed by the
-      // pp_guest cookie token; GuestClaim migrates it on a later sign-in.
+      // Browsing history (NOT a booking): record what the visitor handed off
+      // to the provider. Signed in → save under the user. Guest → save a draft
+      // keyed by the pp_guest cookie token; GuestClaim migrates it on sign-in.
       if (isAuthenticated) await saveTrip(trip);
       else if (guestId) await saveDraft({ guestId, ...trip });
     } catch {
-      // Soft-fail: in the design flow the hand-off proceeds regardless.
+      // Soft-fail: the hand-off proceeds regardless of the history write.
     } finally {
-      // Real app would window.open the provider deep link here.
+      // Affiliate-only model: we never take payment — we deep-link out to the
+      // provider so the user books there. TODO(live-data): replace with the
+      // real Travelpayouts/affiliate deep link (with our affiliate marker)
+      // once the partner program is set up.
+      const query = encodeURIComponent(`${dest.name} ${dest.region}`);
+      const affiliateDeepLink = `https://www.expedia.com/Hotel-Search?destination=${query}`;
+      window.open(affiliateDeepLink, "_blank", "noopener,noreferrer");
       setSaving(false);
       go("detail");
     }
