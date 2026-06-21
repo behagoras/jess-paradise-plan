@@ -6,6 +6,7 @@
 export interface Destination {
   key: string;
   name: string;
+  imageSrc: string;
   region: string;
   nights: number;
   tags: string[];
@@ -68,6 +69,7 @@ export const DESTS: Destination[] = [
   {
     key: "cancun",
     name: "Cancún",
+    imageSrc: "/images/trips/cancun.webp",
     region: "Quintana Roo, MX",
     nights: 3,
     tags: ["Beach", "Nightlife", "Touristic staples"],
@@ -91,6 +93,7 @@ export const DESTS: Destination[] = [
   {
     key: "tulum",
     name: "Tulum",
+    imageSrc: "/images/trips/tulum.webp",
     region: "Quintana Roo, MX",
     nights: 4,
     tags: ["Beach", "Hidden", "Luxury"],
@@ -113,6 +116,7 @@ export const DESTS: Destination[] = [
   {
     key: "oaxaca",
     name: "Oaxaca",
+    imageSrc: "/images/trips/oaxaca.webp",
     region: "Oaxaca, MX",
     nights: 3,
     tags: ["Good food", "Historic", "Hidden"],
@@ -136,6 +140,7 @@ export const DESTS: Destination[] = [
   {
     key: "lisbon",
     name: "Lisbon",
+    imageSrc: "/images/trips/lisbon.webp",
     region: "Portugal",
     nights: 5,
     tags: ["Historic", "Good food", "Nightlife", "Museums"],
@@ -158,6 +163,7 @@ export const DESTS: Destination[] = [
   {
     key: "cruise",
     name: "Caribbean Cruise",
+    imageSrc: "/images/trips/caribbean-cruise.webp",
     region: "7-night sailing",
     nights: 7,
     tags: ["Cruises", "Beach", "Luxury"],
@@ -181,6 +187,7 @@ export const DESTS: Destination[] = [
   {
     key: "patagonia",
     name: "Patagonia",
+    imageSrc: "/images/trips/patagonia.webp",
     region: "Chile",
     nights: 6,
     tags: ["Nature", "Activities"],

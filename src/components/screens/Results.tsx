@@ -57,7 +57,7 @@ export function Results({ planner }: { planner: PlannerApi }) {
                 className="relative h-[188px]"
                 style={{ background: o.gradient }}
               >
-                <ImageSlot placeholder={o.slotHint} />
+                <ImageSlot src={o.imageSrc} placeholder={o.slotHint} />
                 <div
                   className="pointer-events-none absolute inset-0"
                   style={{
