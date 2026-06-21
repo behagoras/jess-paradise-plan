@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import {
-  DESTS,
-  DEST_BASE,
-  PROVIDER,
-  type Destination,
-} from "./data";
+import { DESTS, type Destination } from "./data";
+import { computeOptions } from "./scoring";
+import { computePricing, fmt, type Pricing } from "./pricing";
+import { GEN_PHASE_DELAYS } from "@/components/screens/Generating";
+
+export { fmt };
 
 export type Screen =
   | "landing"
@@ -16,6 +16,19 @@ export type Screen =
   | "detail"
   | "handoff";
 
+/**
+ * The wizard is a 2-step filter layer (see ADR in README):
+ *   Step 1 — When + Activity intensity (the two inputs that drive output),
+ *            plus an optional, collapsed "More filters" group.
+ *   Step 2 — Preference + weather chips, then "Surprise me".
+ *
+ * Which fields actually affect Results lives in `src/lib/scoring.ts`; pricing
+ * lives in `src/lib/pricing.ts`. `general`, `weather`, `intensity`, `budget`,
+ * and the trip-length range (`daysMin`/`daysMax`) drive the Results set.
+ * `departure`, `packages`, `vacation`, and `travelerTypes` are collected but
+ * stay honest no-ops until live data exists.
+ * TODO(live-data): departure filters origins once Amadeus search exists.
+ */
 export interface PlannerState {
   screen: Screen;
   step: number;
@@ -27,6 +40,9 @@ export interface PlannerState {
   vacation: string[];
   travelerTypes: string[];
   intensity: number;
+  /** Inclusive trip-length range (nights) from the optional length filter. */
+  daysMin: number;
+  daysMax: number;
   general: string[];
   weather: string[];
   selected: number;
@@ -35,6 +51,9 @@ export interface PlannerState {
   activityOn: boolean;
   genPhase: number;
 }
+
+/** Total visible wizard steps (Step 3 summary was removed). */
+export const WIZARD_STEPS = 2;
 
 const INITIAL: PlannerState = {
   screen: "landing",
@@ -47,6 +66,8 @@ const INITIAL: PlannerState = {
   vacation: ["Friends", "Adventure"],
   travelerTypes: ["Adult"],
   intensity: 3,
+  daysMin: 0,
+  daysMax: 99,
   general: ["Beach", "Nightlife"],
   weather: ["Hot"],
   selected: 0,
@@ -56,26 +77,12 @@ const INITIAL: PlannerState = {
   genPhase: 0,
 };
 
-export const fmt = (n: number) =>
-  "$" + Math.round(n).toLocaleString("en-US");
-
 /** Snapshot of everything derived from state — flights, hotels, totals, copy. */
-export interface PlannerComputed {
+export interface PlannerComputed extends Pricing {
   options: Destination[];
-  disc: number;
+  /** Filters yielded < 3 matches; Results was backfilled to keep 3 cards. */
+  widened: boolean;
   dest: Destination;
-  base: number;
-  air: { name: string; price: number };
-  hot: { name: string; room: string; price: number };
-  actPrice: number;
-  subtotal: number;
-  discAmt: number;
-  taxes: number;
-  perPerson: number;
-  grand: number;
-  travelersLabel: string;
-  provider: string;
-  breakdown: { k: string; v: string; color: string }[];
 }
 
 export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
@@ -136,105 +143,51 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
   const surprise = useCallback(() => {
     patch({ screen: "generating", genPhase: 0 });
     timers.current.forEach(clearTimeout);
+    // TODO(live-data): these timers are pure UX rhythm over synchronous
+    // scoring. They become a real async-search progress indicator once a live
+    // data source exists; see Generating.tsx copy.
     timers.current = [
-      setTimeout(() => patch({ genPhase: 1 }), 950),
-      setTimeout(() => patch({ genPhase: 2 }), 1850),
+      setTimeout(() => patch({ genPhase: 1 }), GEN_PHASE_DELAYS[0]),
+      setTimeout(() => patch({ genPhase: 2 }), GEN_PHASE_DELAYS[1]),
       setTimeout(() => {
         patch({ screen: "results" });
         scrollTop();
-      }, 2900),
+      }, GEN_PHASE_DELAYS[2]),
     ];
   }, [patch, scrollTop]);
 
   const nextStep = useCallback(() => {
-    if (state.step < 3) goStep(state.step + 1);
+    if (state.step < WIZARD_STEPS) goStep(state.step + 1);
     else surprise();
   }, [state.step, goStep, surprise]);
 
-  // ---- pricing / selectors (mirrors renderVals()) -----------------------
-  const computeOptions = useCallback((): Destination[] => {
-    const scored = DESTS.map((d) => {
-      let sc = 0;
-      state.general.forEach((v) => {
-        if (d.tags.includes(v)) sc += 2;
-      });
-      if (state.weather.includes(d.weather)) sc += 1;
-      sc += 2 - Math.min(2, Math.abs(d.intensity - state.intensity));
-      return { d, sc };
-    }).sort((a, b) => b.sc - a.sc);
-    return scored.slice(0, 3).map((x) => x.d);
-  }, [state.general, state.weather, state.intensity]);
-
+  // ---- selectors (thin: delegates to pure scoring + pricing modules) ----
   const computed = useMemo<PlannerComputed>(() => {
-    const options = computeOptions();
+    const { options, widened } = computeOptions({
+      general: state.general,
+      weather: state.weather,
+      intensity: state.intensity,
+      budget: state.budget,
+      daysMin: state.daysMin,
+      daysMax: state.daysMax,
+    });
     const dest = options[state.selected] || DESTS[0];
-    const base = DEST_BASE[dest.key];
-    const disc = state.when === "Flexible" ? 0.34 : 0.16;
-
-    const airlines = [
-      { name: dest.airline, price: base * 0.46 },
-      { name: "Volaris", price: base * 0.36 },
-      { name: "Delta", price: base * 0.58 },
-    ];
-    const hotels = [
-      { name: dest.hotel, room: dest.room, price: base * 0.4 },
-      { name: "Beachfront Suite", room: "King, ocean view", price: base * 0.64 },
-      { name: "Casa Boutique", room: "Garden room", price: base * 0.27 },
-    ];
-    const air = airlines[state.airlineIdx];
-    const hot = hotels[state.hotelIdx];
-    const actPrice = base * 0.16;
-    const subtotal = air.price + hot.price + (state.activityOn ? actPrice : 0);
-    const discAmt = subtotal * disc;
-    const taxes = (subtotal - discAmt) * 0.16;
-    const perPerson = subtotal - discAmt + taxes;
-    const grand = perPerson * state.travelers;
-    const travelersLabel =
-      state.travelers + (state.travelers === 1 ? " traveler" : " travelers");
-
-    const breakdown = [
-      { k: "Flight · " + air.name, v: fmt(air.price), color: "var(--ink)" },
-      { k: "Hotel · " + hot.room, v: fmt(hot.price), color: "var(--ink)" },
-    ];
-    if (state.activityOn)
-      breakdown.push({
-        k: "Activity · " + dest.activity,
-        v: fmt(actPrice),
-        color: "var(--ink)",
-      });
-    breakdown.push({
-      k:
-        state.when === "Flexible"
-          ? "Flexibility discount"
-          : "Early-bird discount",
-      v: "−" + fmt(discAmt),
-      color: "var(--palm)",
-    });
-    breakdown.push({
-      k: "Taxes & fees",
-      v: fmt(taxes),
-      color: "var(--ink)",
-    });
-
-    return {
-      options,
-      disc,
+    const pricing = computePricing({
       dest,
-      base,
-      air,
-      hot,
-      actPrice,
-      subtotal,
-      discAmt,
-      taxes,
-      perPerson,
-      grand,
-      travelersLabel,
-      provider: PROVIDER,
-      breakdown,
-    };
+      when: state.when,
+      airlineIdx: state.airlineIdx,
+      hotelIdx: state.hotelIdx,
+      activityOn: state.activityOn,
+      travelers: state.travelers,
+    });
+    return { options, widened, dest, ...pricing };
   }, [
-    computeOptions,
+    state.general,
+    state.weather,
+    state.intensity,
+    state.budget,
+    state.daysMin,
+    state.daysMax,
     state.selected,
     state.when,
     state.airlineIdx,
