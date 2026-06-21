@@ -25,7 +25,7 @@ or point a fresh session at it. See `bundle-readme.md` for how the bundle is use
 | `context/prototipo-drift.md` | `docs/wiki/prototipo-drift.md` |
 | `context/drift-design-prompt.md` | `docs/sources/2026-06-prompt-interfaz-drift.md` |
 | `context/Presentation.md` | `design/project-base/Presentation.md` |
-| `flow/flujo-app-ui.md` | `docs/flujo-app-ui.md` |
+| `flow/flujo-app-ui.md` ⚠️ *historical — 2019 XD checkout, not current; see banner in the source* | `docs/flujo-app-ui.md` |
 | `flow/ParadisePlanMobile.pdf` | `design/project-base/ParadisePlanMobile.pdf` |
 | `assets/screens/*.png` | `design/project-base/PP/` |
 | `assets/Features-sitemap.jpg` | `design/project-base/Features.jpg` |

@@ -32,10 +32,11 @@ export function Landing({ planner }: { planner: PlannerApi }) {
         </SignedIn>
       </div>
 
-      {/* Hero. On desktop the rail carries the tagline + live badge, so here
-          the hero becomes a shorter image banner to avoid duplication. */}
+      {/* Hero (mobile/tablet only). On desktop the persistent BrandRail already
+          carries the tagline + scene, so this content-less gradient is hidden
+          at lg to keep the CTA above the fold instead of duplicating the rail. */}
       <div
-        className="relative h-[300px] overflow-hidden rounded-[28px] shadow-[0_18px_40px_-18px_rgba(240,84,45,.5)] sm:h-[360px] lg:mt-2 lg:h-[280px]"
+        className="relative h-[300px] overflow-hidden rounded-[28px] shadow-[0_18px_40px_-18px_rgba(240,84,45,.5)] sm:h-[360px] lg:hidden"
         style={{
           background: "linear-gradient(150deg,#F0876B,#F2B25A 45%,#2FC1C9)",
         }}
@@ -52,9 +53,9 @@ export function Landing({ planner }: { planner: PlannerApi }) {
               "linear-gradient(to top,rgba(20,12,6,.72) 6%,rgba(20,12,6,.12) 48%,rgba(20,12,6,.28))",
           }}
         />
+        {/* Honest descriptor — no fake live "trips matched" counter or pulse. */}
         <div className="pointer-events-none absolute left-[18px] top-[18px] inline-flex items-center gap-[7px] rounded-full bg-white/90 px-3 py-[7px] text-[11.5px] font-extrabold tracking-[.02em] text-ink lg:hidden">
-          <span className="animate-pp-pulse h-[7px] w-[7px] rounded-full bg-primary" />
-          1,240 trips matched this week
+          6 curated destinations · all prices estimated
         </div>
         <div className="pointer-events-none absolute inset-x-[22px] bottom-[22px] lg:hidden">
           <div className="font-display text-[33px] font-extrabold leading-[1.02] tracking-[-.01em] text-white [text-shadow:0_2px_18px_rgba(0,0,0,.35)] sm:text-[40px] lg:text-[52px]">

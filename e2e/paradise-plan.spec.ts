@@ -11,10 +11,9 @@ async function planToHandoff(page: Page) {
   await page.getByRole("button", { name: "Get started" }).click();
   await expect(page.locator('[data-screen-label="Preferences"]')).toBeVisible();
 
-  // Step 1 → Step 2 → Step 3 (defaults are pre-selected).
+  // Step 1 → Step 2 (defaults are pre-selected; the wizard is now 2 steps).
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByText("Selections summary")).toBeVisible();
+  await expect(page.getByText("Preferences")).toBeVisible();
 
   // Generate → results (the loader runs ~2.9s).
   await page.getByRole("button", { name: "Surprise me" }).click();
@@ -45,17 +44,25 @@ test.describe("Paradise Plan — guest flow", () => {
     ).toBeVisible();
   });
 
-  test("budget slider and traveler stepper update the summary", async ({
+  test("traveler stepper (in More filters) carries through to results", async ({
     page,
   }) => {
     await setupClerkTestingToken({ page });
     await page.goto("/");
     await page.getByRole("button", { name: "Get started" }).click();
 
+    // Travelers + budget now live in the optional, collapsed "More filters".
+    await page.getByRole("button", { name: /More filters/ }).click();
     // Bump travelers 2 → 3 via the "+" stepper.
     await page.getByRole("button", { name: "+", exact: true }).click();
+
+    // Step 1 → Step 2 → results, then open a package to see the travelers label.
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Surprise me" }).click();
+    await expect(page.locator('[data-screen-label="Results"]')).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Select" }).first().click();
 
     await expect(page.getByText("3 travelers")).toBeVisible();
   });

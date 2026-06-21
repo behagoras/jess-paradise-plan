@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 
 export function Results({ planner }: { planner: PlannerApi }) {
   const { computed, go, patch, scrollTop } = planner;
-  const { options, disc } = computed;
+  const { options, disc, widened } = computed;
 
   const select = (i: number) => {
     patch({
@@ -42,6 +42,13 @@ export function Results({ planner }: { planner: PlannerApi }) {
           </div>
         </div>
       </div>
+
+      {widened && (
+        <div className="mt-2 rounded-[14px] border border-line bg-surface2 px-4 py-3 text-[12.5px] font-semibold leading-[1.5] text-ink-soft">
+          Few trips fit your filters — widen your budget or trip length to see
+          more. Showing the closest matches below.
+        </div>
+      )}
 
       <div className="grid gap-4 pt-2 lg:grid-cols-2 xl:grid-cols-3">
         {options.map((o, i) => {
@@ -107,8 +114,12 @@ export function Results({ planner }: { planner: PlannerApi }) {
                 <Separator className="mt-auto bg-line" />
                 <div className="flex items-center justify-between pt-[13px]">
                   <div>
+                    {/* Honest, static descriptor — no fake countdown or
+                        "seats left" inventory. TODO(live-data): show real
+                        departure windows + availability once a live flight
+                        search backs this. */}
                     <div className="text-[11px] font-bold text-ink-soft">
-                      Departs in {o.departsIn} days · {o.seats} seats left
+                      {o.nights} nights · {o.region}
                     </div>
                     <div className="flex items-baseline gap-[7px]">
                       <span className="text-xs text-ink-soft line-through">

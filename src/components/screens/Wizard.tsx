@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   CITIES,
   WHEN,
@@ -9,11 +10,11 @@ import {
   GENERAL,
   WEATHER,
 } from "@/lib/data";
+import { TRIP_LENGTHS } from "@/lib/scoring";
 import { Chip } from "@/components/ui/chip";
 import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { fmt, type PlannerApi } from "@/lib/usePlanner";
+import { fmt, WIZARD_STEPS, type PlannerApi } from "@/lib/usePlanner";
 import { cn } from "@/lib/utils";
 
 const fieldLabel =
@@ -50,6 +51,8 @@ const h2 =
   "font-display m-0 mb-[3px] text-[25px] font-extrabold tracking-[-.01em]";
 const sub = "m-0 mb-[22px] text-sm text-ink-soft";
 
+const STEPS = Array.from({ length: WIZARD_STEPS }, (_, i) => i + 1);
+
 export function Wizard({ planner }: { planner: PlannerApi }) {
   const { state, setState, toggleArr, goStep, prevStep } = planner;
 
@@ -76,7 +79,7 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
         >
           ←
         </button>
-        {[1, 2, 3].map((n) => (
+        {STEPS.map((n) => (
           <button key={n} onClick={() => goStep(n)} className={tabClass(n)}>
             Step {n}
           </button>
@@ -86,24 +89,16 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
       <div className="mb-5 h-1.5 overflow-hidden rounded-md bg-line">
         <div
           className="h-full rounded-md bg-primary transition-all duration-300"
-          style={{ width: Math.round((state.step / 3) * 100) + "%" }}
+          style={{ width: Math.round((state.step / WIZARD_STEPS) * 100) + "%" }}
         />
       </div>
 
-      {/* STEP 1 */}
+      {/* STEP 1 — only the two fields that drive output stay visible; the rest
+          collapse into an optional, default-closed "More filters" group. */}
       {state.step === 1 && (
         <div className="animate-pp-up">
           <h2 className={h2}>Your trip</h2>
           <p className={sub}>The basics. Flexibility unlocks the best prices.</p>
-
-          <div className={fieldLabel}>Departure point</div>
-          <div className="mb-6">
-            <ChipRow
-              items={CITIES}
-              isActive={(v) => state.departure === v}
-              onPick={(v) => setState((s) => ({ ...s, departure: v }))}
-            />
-          </div>
 
           <div className={fieldLabel}>When</div>
           <div className="mb-6">
@@ -112,6 +107,137 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
               isActive={(v) => state.when === v}
               onPick={(v) => setState((s) => ({ ...s, when: v }))}
             />
+          </div>
+
+          <div className="mb-[11px] flex items-center justify-between">
+            <span className={cn(fieldLabel, "mb-0")}>Activity intensity</span>
+            <span className="text-xs font-bold text-ink-soft">low → high</span>
+          </div>
+          <div className="mb-2 flex gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => setState((s) => ({ ...s, intensity: n }))}
+                className={cn(
+                  "font-display flex-1 cursor-pointer rounded-xl border-[1.5px] py-[13px] text-base font-extrabold transition-all duration-150",
+                  n === state.intensity
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-line bg-card text-ink",
+                )}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+
+          <MoreFilters planner={planner} />
+        </div>
+      )}
+
+      {/* STEP 2 */}
+      {state.step === 2 && (
+        <div className="animate-pp-up">
+          <h2 className={h2}>Preferences</h2>
+          <p className={sub}>The feeling you&apos;re after. Select all that apply.</p>
+
+          <div className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-ink">
+            General
+          </div>
+          <div className="mb-[26px]">
+            <ChipRow
+              items={GENERAL}
+              isActive={(v) => state.general.includes(v)}
+              onPick={(v) => toggleArr("general", v)}
+            />
+          </div>
+
+          <div className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-ink">
+            Weather
+          </div>
+          <ChipRow
+            items={WEATHER}
+            isActive={(v) => state.weather.includes(v)}
+            onPick={(v) => toggleArr("weather", v)}
+            accent2
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Optional, default-closed disclosure holding the fields that don't (yet)
+ * change Results: budget + trip length filter against the static catalog;
+ * departure, packages, vacation type, and who's-traveling are collected but
+ * stay honest no-ops until live data exists.
+ * TODO(live-data): departure filters origins once Amadeus search is wired.
+ */
+function MoreFilters({ planner }: { planner: PlannerApi }) {
+  const { state, setState, toggleArr } = planner;
+  const [open, setOpen] = useState(false);
+
+  const activeLength =
+    TRIP_LENGTHS.find(
+      (t) => t.min === state.daysMin && t.max === state.daysMax,
+    ) ?? TRIP_LENGTHS[0];
+
+  return (
+    <div className="mt-[22px]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-[14px] border-[1.5px] border-line bg-card px-4 py-3 text-left"
+      >
+        <span className="text-sm font-extrabold text-ink">
+          More filters{" "}
+          <span className="font-bold text-ink-soft">· optional</span>
+        </span>
+        <span
+          className="text-[13px] text-ink-soft transition-transform duration-200"
+          style={{ transform: open ? "rotate(180deg)" : "none" }}
+        >
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <div
+          className="animate-pp-up mt-4"
+          aria-label="Optional filters"
+        >
+          <div className={fieldLabel}>Trip length</div>
+          <div className="mb-6">
+            <ChipRow
+              items={TRIP_LENGTHS.map((t) => t.label)}
+              isActive={(v) => v === activeLength.label}
+              onPick={(v) => {
+                const t = TRIP_LENGTHS.find((x) => x.label === v);
+                if (t) setState((s) => ({ ...s, daysMin: t.min, daysMax: t.max }));
+              }}
+            />
+          </div>
+
+          <div className="mb-3.5 flex items-baseline justify-between">
+            <span className={cn(fieldLabel, "mb-0")}>Budget per person</span>
+            <span className="font-display text-[22px] font-extrabold text-primary">
+              {fmt(state.budget)}
+            </span>
+          </div>
+          <Slider
+            min={400}
+            max={6000}
+            step={100}
+            value={[state.budget]}
+            onValueChange={(v) =>
+              setState((s) => ({ ...s, budget: v[0] ?? s.budget }))
+            }
+            className="py-2.5"
+          />
+          <div className="mb-[26px] mt-1 flex justify-between text-xs font-semibold text-ink-soft">
+            <span>$400</span>
+            <span>$6,000+</span>
           </div>
 
           <div className="mb-[11px] flex items-center justify-between">
@@ -147,27 +273,16 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
             </div>
           </div>
 
-          <Separator className="my-[18px_0] mb-[22px] mt-[18px] bg-line" />
+          <Separator className="my-[22px] bg-line" />
 
-          <div className="mb-3.5 flex items-baseline justify-between">
-            <span className={cn(fieldLabel, "mb-0")}>Budget per person</span>
-            <span className="font-display text-[22px] font-extrabold text-primary">
-              {fmt(state.budget)}
-            </span>
-          </div>
-          <Slider
-            min={400}
-            max={6000}
-            step={100}
-            value={[state.budget]}
-            onValueChange={(v) =>
-              setState((s) => ({ ...s, budget: v[0] ?? s.budget }))
-            }
-            className="py-2.5"
-          />
-          <div className="mb-[26px] mt-1 flex justify-between text-xs font-semibold text-ink-soft">
-            <span>$400</span>
-            <span>$6,000+</span>
+          {/* Departure: honest no-op until live data. */}
+          <div className={fieldLabel}>Departure point</div>
+          <div className="mb-6">
+            <ChipRow
+              items={CITIES}
+              isActive={(v) => state.departure === v}
+              onPick={(v) => setState((s) => ({ ...s, departure: v }))}
+            />
           </div>
 
           <div className={fieldLabel}>Include</div>
@@ -189,118 +304,15 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
           </div>
 
           <div className={fieldLabel}>Who&apos;s traveling</div>
-          <div className="mb-6">
+          <div className="mb-2">
             <ChipRow
               items={TRAVELER_TYPES}
               isActive={(v) => state.travelerTypes.includes(v)}
               onPick={(v) => toggleArr("travelerTypes", v)}
             />
           </div>
-
-          <div className="mb-[11px] flex items-center justify-between">
-            <span className={cn(fieldLabel, "mb-0")}>Activity intensity</span>
-            <span className="text-xs font-bold text-ink-soft">low → high</span>
-          </div>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                onClick={() => setState((s) => ({ ...s, intensity: n }))}
-                className={cn(
-                  "font-display flex-1 cursor-pointer rounded-xl border-[1.5px] py-[13px] text-base font-extrabold transition-all duration-150",
-                  n === state.intensity
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-line bg-card text-ink",
-                )}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
         </div>
       )}
-
-      {/* STEP 2 */}
-      {state.step === 2 && (
-        <div className="animate-pp-up">
-          <h2 className={h2}>Preferences</h2>
-          <p className={sub}>The feeling you&apos;re after. Select all that apply.</p>
-
-          <div className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-ink">
-            General
-          </div>
-          <div className="mb-[26px]">
-            <ChipRow
-              items={GENERAL}
-              isActive={(v) => state.general.includes(v)}
-              onPick={(v) => toggleArr("general", v)}
-            />
-          </div>
-
-          <div className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-ink">
-            Weather
-          </div>
-          <ChipRow
-            items={WEATHER}
-            isActive={(v) => state.weather.includes(v)}
-            onPick={(v) => toggleArr("weather", v)}
-            accent2
-          />
-        </div>
-      )}
-
-      {/* STEP 3 */}
-      {state.step === 3 && <Step3Summary planner={planner} />}
-    </div>
-  );
-}
-
-function Step3Summary({ planner }: { planner: PlannerApi }) {
-  const { state } = planner;
-  const filters = state.general.concat(state.weather);
-  const travelersLabel =
-    state.travelers + (state.travelers === 1 ? " traveler" : " travelers");
-
-  const rows = [
-    { k: "Departure", v: state.departure },
-    { k: "When", v: state.when },
-    { k: "Travelers", v: travelersLabel },
-    { k: "Budget", v: fmt(state.budget) + " / person" },
-    { k: "Packages", v: state.packages.length ? state.packages.join(", ") : "Any" },
-    { k: "Vacation type", v: state.vacation.length ? state.vacation.join(", ") : "Any" },
-    {
-      k: "Traveler type",
-      v: state.travelerTypes.length ? state.travelerTypes.join(", ") : "Any",
-    },
-    { k: "Activity level", v: state.intensity + " / 5" },
-    { k: "Filters", v: filters.length ? filters.join(", ") : "Any" },
-  ];
-
-  return (
-    <div className="animate-pp-up">
-      <h2 className={h2}>Selections summary</h2>
-      <p className={sub}>Review, then let us surprise you.</p>
-
-      <div className="rounded-[20px] border border-line bg-card px-[19px] pb-2.5 pt-1.5">
-        {rows.map((r, i) => (
-          <div
-            key={r.k}
-            className={cn(
-              "flex justify-between gap-4 py-[11px]",
-              i !== rows.length - 1 && "border-b border-line",
-            )}
-          >
-            <span className="whitespace-nowrap text-[13.5px] font-bold text-ink-soft">
-              {r.k}
-            </span>
-            <span className="text-right text-sm font-bold">{r.v}</span>
-          </div>
-        ))}
-      </div>
-      <p className="mx-1.5 mt-4 text-center text-[12.5px] leading-[1.5] text-ink-soft">
-        Tap any step above to edit. We never charge you here. You book on the
-        provider&apos;s site.
-      </p>
     </div>
   );
 }
