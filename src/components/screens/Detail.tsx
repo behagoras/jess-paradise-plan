@@ -26,6 +26,7 @@ export function Detail({ planner }: { planner: PlannerApi }) {
 
   const includeFlight = state.packages.includes("Flight");
   const includeHotel = state.packages.includes("Hotel");
+  const includeActivity = state.packages.includes("Activity");
 
   // No real offer to show (empty/errored search). Bounce back to Results,
   // which renders the honest widen hint.
@@ -91,7 +92,7 @@ export function Detail({ planner }: { planner: PlannerApi }) {
             </p>
           )}
 
-          {/* Flight — real airline, real outbound/return dates from the API. */}
+          {/* Flight - real airline, real outbound/return dates from the API. */}
           {includeFlight && (
             <div className={cardClass}>
               <div className="mb-[13px] flex items-center justify-between">
@@ -118,7 +119,7 @@ export function Detail({ planner }: { planner: PlannerApi }) {
                     )}
                   </div>
                   <div className="text-xs tracking-[1px] text-ink-soft">
-                    •—✈—•
+                    •-✈-•
                   </div>
                   <div className="text-center">
                     <div className="font-display text-base font-extrabold">
@@ -136,7 +137,7 @@ export function Detail({ planner }: { planner: PlannerApi }) {
             </div>
           )}
 
-          {/* Hotel — only when included AND a real hotel came back. */}
+          {/* Hotel - only when included AND a real hotel came back. */}
           {includeHotel && offer.hotel && hotelPerPerson != null && (
             <div className={cardClass}>
               <div className="mb-[9px] flex items-center justify-between">
@@ -162,7 +163,31 @@ export function Detail({ planner }: { planner: PlannerApi }) {
             </div>
           )}
 
-          {/* Breakdown — built only from the real, included, priced lines. */}
+          {/* Activity - only when included AND a real Viator product came back.
+              Its price is a per-person "from" price; we link out on hand-off. */}
+          {includeActivity && offer.activity && (
+            <div className={cardClass}>
+              <div className="mb-[9px] flex items-center justify-between">
+                <div className={cardTitle}>
+                  <span className="text-[17px] text-primary">◎</span>
+                  {offer.activity.title}
+                </div>
+                {offer.activity.rating != null && (
+                  <span className="text-[11px] font-bold text-star">
+                    ★ {offer.activity.rating.toFixed(1)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-[13px] text-ink-soft">From · per person</div>
+                <div className="text-[15px] font-extrabold">
+                  {fmt(offer.activity.priceFrom)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Breakdown - built only from the real, included, priced lines. */}
           <div className="rounded-[20px] bg-surface2 px-[18px] py-[17px]">
             <div className="mb-[13px] text-xs font-extrabold uppercase tracking-[.06em] text-ink-soft">
               Price breakdown · {travelersLabel}
@@ -203,7 +228,7 @@ export function Detail({ planner }: { planner: PlannerApi }) {
           </div>
 
           <div className="mt-3 text-center text-[11.5px] leading-[1.5] text-ink-soft">
-            Live cached {currency.toUpperCase()} fares — confirmed on the
+            Live cached {currency.toUpperCase()} fares - confirmed on the
             provider&apos;s site at booking.
           </div>
         </div>
