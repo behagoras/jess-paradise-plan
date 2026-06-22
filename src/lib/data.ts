@@ -188,16 +188,6 @@ export const DESTS: Destination[] = [
   },
 ];
 
-/** Per-destination base price (USD), keyed by destination `key`. */
-export const DEST_BASE: Record<string, number> = {
-  cancun: 540,
-  tulum: 720,
-  oaxaca: 380,
-  lisbon: 880,
-  cruise: 690,
-  patagonia: 1340,
-};
-
 export const HOW_IT_WORKS = [
   {
     n: "1",
