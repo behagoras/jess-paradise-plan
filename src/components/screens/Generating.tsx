@@ -3,25 +3,16 @@
 import type { PlannerApi } from "@/lib/usePlanner";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Phase timer offsets (ms) for the loader. Pure UX rhythm over synchronous
- * scoring — the work itself is instant. Co-located here so the copy and the
- * timing live together.
- * TODO(live-data): becomes a real async-search progress timeline once a live
- * data source exists, at which point the copy below can describe actual work.
- */
-export const GEN_PHASE_DELAYS = [950, 1850, 2900] as const;
-
-// Honest copy: the match runs locally and instantly, so we describe matching
-// the user's preferences — not server work that does not happen.
-// TODO(live-data): restore per-phase "Pricing departures…" copy when a real
-// flight/hotel search backs each phase.
+// Per-phase copy + progress, backed by REAL search awaits in usePlanner's
+// `surprise()`: phase 0 = querying live flight fares, phase 1 = pricing the
+// stays, phase 2 = assembling the trips. genPhase advances as each await
+// resolves, so the bar reflects work that actually happened.
 const STATUS = [
-  "Matching your preferences...",
-  "Matching your preferences...",
-  "Matching your preferences...",
+  "Searching live flight fares…",
+  "Pricing real stays…",
+  "Assembling your trips…",
 ];
-const PCT = [28, 64, 96];
+const PCT = [34, 72, 96];
 
 export function Generating({ planner }: { planner: PlannerApi }) {
   const { genPhase } = planner.state;

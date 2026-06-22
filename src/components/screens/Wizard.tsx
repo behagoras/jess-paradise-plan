@@ -167,11 +167,12 @@ export function Wizard({ planner }: { planner: PlannerApi }) {
 }
 
 /**
- * Optional, default-closed disclosure holding the fields that don't (yet)
- * change Results: budget + trip length filter against the static catalog;
- * departure, packages, vacation type, and who's-traveling are collected but
- * stay honest no-ops until live data exists.
- * TODO(live-data): departure filters origins once Amadeus search is wired.
+ * Optional, default-closed disclosure. Most of these now drive real output:
+ * budget + trip length filter the candidate destinations, departure sets the
+ * real flight origin (Travelpayouts), travelers becomes the adult count, and the
+ * "Include" packages decide which real lines (flight / hotel) are fetched and
+ * priced. Vacation type and who's-traveling are still collected for future use
+ * but don't yet affect results — honest no-ops, not faked output.
  */
 function MoreFilters({ planner }: { planner: PlannerApi }) {
   const { state, setState, toggleArr } = planner;
@@ -275,7 +276,7 @@ function MoreFilters({ planner }: { planner: PlannerApi }) {
 
           <Separator className="my-[22px] bg-line" />
 
-          {/* Departure: honest no-op until live data. */}
+          {/* Departure sets the real Travelpayouts flight origin (CITY_TO_IATA). */}
           <div className={fieldLabel}>Departure point</div>
           <div className="mb-6">
             <ChipRow

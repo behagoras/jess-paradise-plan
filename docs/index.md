@@ -42,7 +42,7 @@ Este vault sigue el metodo Karpathy de LLM-Wiki: las notas de investigacion crud
 
 - [[legal-y-fiscal-mexico]] - Marco legal para operar desde Mexico: que puedes hacer como afiliado sin ser agencia, donde se cruza la linea hacia prestador turistico formal, y como manejar RFC, ISR sobre comisiones del exterior y cobro en USD.
 - [[acreditacion-y-host-agencies]] - Rutas para pasar de afiliado a reservas propias: IATA, TIDS, CLIA para cruceros, consolidadores aereos, host agencies (Fora en Mexico desde mayo 2025) y Duffel Managed Content como alternativa sin acreditacion propia.
-- [[riesgos-y-preguntas-abiertas]] - Consolidacion de riesgos confirmados por investigacion (acceso a inventario, brecha de Amadeus, cierre de Hotellook) e hipotesis del fundador sin validar, organizados por tema.
+- [[riesgos-y-preguntas-abiertas]] - Consolidacion de riesgos confirmados por investigacion (acceso a inventario, baja de Amadeus Self-Service y dependencia de fuente unica, cierre de Hotellook) e hipotesis del fundador sin validar, organizados por tema.
 
 ### Referencia
 
@@ -76,8 +76,10 @@ Las siguientes notas son el material de investigacion original. Son inmutables; 
 
 ## Estado y proximo paso
 
-**Fecha de ultima actualizacion:** 2026-06-20
+**Fecha de ultima actualizacion:** 2026-06-22
 
 El vault esta completo con la investigacion de la fase de descubrimiento. Las 13 paginas wiki cubren estrategia, mercado, tecnologia, operacion y diseno.
 
-**Proximo paso inmediato:** disenar y construir la arquitectura del Corte 1 en Next.js, implementando el feed de vuelos flexibles con Amadeus Flight Inspiration Search API y Travelpayouts Data API como fuentes, Route Handlers como proxy server-side y ISR para el modelo de datos cacheado. Ver [[arquitectura-mvp]] y [[roadmap]] para la especificacion detallada.
+**Estado del build:** la app construida (ver `BUILT-APP.md` y `README.md`, en ingles) ya corre con **datos reales de Travelpayouts**: el flujo wizard -> resultados -> detalle -> hand-off muestra vuelos, fechas, aerolineas, escalas y precios por persona reales, obtenidos via **Convex actions** (`convex/travelpayouts.ts`) que guardan el token server-side. Regla vinculante: **si la API no devuelve un campo, se oculta, nunca se inventa** (se eliminaron descuentos falsos, ratings inventados y contadores de escasez `seats`/`departsIn`). Los hoteles estan cableados (Hotellook) pero se ocultan cuando el proveedor no responde — hoy Hotellook esta caido upstream, asi que los viajes cotizan solo-vuelo. El hand-off de afiliado deep-linkea a **Aviasales** (marca de vuelos de Travelpayouts), no a un merchant que no integramos.
+
+**Proximo paso inmediato:** evolucionar del wizard-como-filtro hacia el feed feed-first de destino abierto (`v2/prices/latest?origin=MEX`) enriquecido contra el mapa IATA->vibe en Convex. Ver [[arquitectura-mvp]] y [[roadmap]] para la especificacion detallada.

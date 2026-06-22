@@ -2,14 +2,14 @@ import { LogoMark, PlaneGlyph } from "./Logo";
 
 /**
  * Honest descriptors shown at the foot of the rail. Decorative, desktop-only.
- * These describe the actual prototype rather than inventing usage metrics.
- * TODO(live-data): swap for real rating / savings / time once usage data and
- * live pricing exist.
+ * These describe the actual prototype rather than inventing usage metrics,
+ * ratings, or savings — every value here is a literal fact about the app
+ * (6-destination catalog, top-3 results, cached "from" prices).
  */
 const STATS: [string, string][] = [
   ["6", "curated destinations"],
   ["3", "results per search"],
-  ["~", "all prices estimated"],
+  ["~", "cached 'from' prices"],
 ];
 
 /**

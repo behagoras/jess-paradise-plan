@@ -23,19 +23,30 @@ landing → wizard (step 1 → 2) → generating → results → detail → hand
   **"More filters"** disclosure (budget, trip length, travelers, departure,
   packages, vacation type, who's-traveling). Step 2 is the preference + weather
   chips, ending in **"Surprise me"**.
-- **generating** (`Generating.tsx`) — a ~2.9s animated loader. The match itself
-  is synchronous/instant; the timers (`GEN_PHASE_DELAYS`) are pure UX rhythm.
-  Copy is deliberately honest ("Matching your preferences…").
-- **results** (`Results.tsx`) — top-3 destinations scored against the static
-  catalog. Shows a soft "widen your budget / trip length" note when filters
-  yield fewer than 3 strict matches (`computed.widened`).
-- **detail** (`Detail.tsx`) — flight / hotel cards (cycle through 3 static
-  options each), optional activity, and a **static** price breakdown.
+- **generating** (`Generating.tsx`) — animated loader whose phases advance on
+  the **real** Travelpayouts search awaits in `surprise()` (genPhase 0 → 1 → 2:
+  searching fares → pricing stays → assembling). The copy is honest about the
+  live work happening.
+- **results** (`Results.tsx`) — up to 3 **real** trips: each card's flight
+  airline, dates, transfers, and per-person fare come from Travelpayouts; the
+  catalog only supplies the photo, blurb, and region copy. No "best match" badge
+  and no rating (those were fabricated and removed). Shows a "widen your budget /
+  trip length / departure" note when the live search returns few or no matches.
+- **detail** (`Detail.tsx`) — the selected trip's **real** flight (airline,
+  origin/destination, real outbound/return dates, stop count, fare) and **real**
+  hotel (name, stars, price) when Hotellook returns one — the hotel line is
+  **hidden** when it doesn't (currently the case: Hotellook is down upstream).
+  The price breakdown is summed from only the real, included lines.
 - **handoff** (`HandoffSheet.tsx`) — bottom-sheet overlay. Records the selection
-  as **browsing history** in Convex (NOT a booking) and `window.open`s a
-  placeholder provider deep link. **Affiliate-only** — we never take payment.
+  as **browsing history** in Convex (NOT a booking) and `window.open`s the
+  **real** affiliate deep link the flight search returned (Aviasales, with our
+  Travelpayouts marker), falling back to a Hotellook destination search.
+  **Affiliate-only** — we never take payment.
 
-There are **no network/API calls in `src/`**. All data is hardcoded.
+`src/` itself holds no secrets and makes no direct provider calls: all live data
+is fetched through **Convex actions** (`convex/travelpayouts.ts`) that keep the
+Travelpayouts token server-side. The data layer **hides any field the API
+doesn't return** rather than fabricating it.
 
 ## `PlannerState` and which fields drive output
 
@@ -44,32 +55,41 @@ collected inputs, only some affect the Results set / price:
 
 | Field | Drives output? | Where |
 | --- | --- | --- |
-| `general` (vibe chips) | ✅ scoring | `scoring.ts` |
+| `general` (vibe chips) | ✅ scoring (picks candidates) | `scoring.ts` |
 | `weather` | ✅ scoring | `scoring.ts` |
 | `intensity` | ✅ scoring | `scoring.ts` |
 | `budget` | ✅ filter (≤ base × 1.3) | `scoring.ts` |
 | `daysMin` / `daysMax` (trip length) | ✅ filter on `dest.nights` | `scoring.ts` |
-| `when` | ✅ discount + date labels | `pricing.ts`, `Detail.tsx` |
-| `travelers`, `airlineIdx`, `hotelIdx`, `activityOn` | ✅ price math | `pricing.ts` |
-| `departure` | ❌ honest no-op | TODO(live-data): Amadeus origin filter |
-| `packages`, `vacation`, `travelerTypes` | ❌ honest no-op | collected for future use |
+| `departure` | ✅ real flight origin (IATA) | `trip.ts` → `travelpayouts.ts` |
+| `when` | ✅ real departure month | `trip.ts` → `travelpayouts.ts` |
+| `travelers` | ✅ adults + per-person split | `usePlanner.ts`, `pricing.ts` |
+| `packages` (Include) | ✅ which real lines fetch & price | `usePlanner.ts` |
+| `vacation`, `travelerTypes` | ❌ honest no-op | collected for future use |
 
-The scoring/filtering rules and the pricing math are split into **pure modules**:
-- `src/lib/scoring.ts` — `computeOptions()` (score + budget/length filter + top 3).
-- `src/lib/pricing.ts` — `computePricing()` and the named price-ratio constants.
+The candidate-selection rules and the pricing math are split into **pure
+modules**, while the live fetch lives in the planner:
+- `src/lib/scoring.ts` — `computeOptions()` scores the catalog to choose which
+  destinations to fetch real fares for (+ budget/length filter, top 3).
+- `src/lib/trip.ts` — pure date/IATA helpers (departure city → origin, `when` →
+  month, real flight window → hotel check-in/out, date labels).
+- `src/lib/pricing.ts` — `computePricing()` sums **only the real line items** the
+  API returned (no ratios, no seed base, no fake discount/tax).
 
-`usePlanner` is a thin coordinator: it owns React state and delegates to those
-modules. The `PlannerApi` shape is the public contract every screen depends on.
+`usePlanner.surprise()` is the coordinator: it scores the catalog, fetches real
+flights + hotels via the Convex actions, drops candidates with no real fare
+(hide-missing), backfills from cheapest-anywhere, and assembles the offers. The
+`PlannerApi` shape is the public contract every screen depends on.
 
 ## The catalog (6 destinations)
 
-`src/lib/data.ts` holds the static catalog: `DESTS` (6 destinations:
+`src/lib/data.ts` holds the curated catalog: `DESTS` (6 destinations:
 Cancún, Tulum, Oaxaca, Lisbon, Caribbean Cruise, Patagonia), the per-destination
-seed price map `DEST_BASE` (USD), and `PROVIDER` (`"Expedia"`). `DEST_BASE`
-denominates a notional all-in per-person seed; `pricing.ts` slices it into
-flight/hotel/activity line items. (`departsIn` / `seats` fields exist in the
-catalog but are **not rendered** — they were fake scarcity signals and are now
-unused; they will become real once a live inventory source exists.)
+`DEST_BASE` (USD) used **only as a budget-filter threshold** (not a displayed
+price), and `PROVIDER` (`"Aviasales"` — the Travelpayouts flight brand the
+hand-off actually deep-links to). The catalog supplies the photo, blurb, region,
+and vibe tags that pick candidates; the displayed flight airline, dates, fares,
+and hotel are all **real** Travelpayouts data, not catalog fields. (The old
+fabricated `rating` / `departsIn` / `seats` scarcity fields have been removed.)
 
 ## Convex (`convex/schema.ts`, `convex/trips.ts`)
 

@@ -12,7 +12,6 @@ export interface Destination {
   tags: string[];
   weather: string;
   intensity: number;
-  rating: string;
   airline: string;
   hotel: string;
   room: string;
@@ -22,8 +21,6 @@ export interface Destination {
   gradient: string;
   from: string;
   to: string;
-  departsIn: number;
-  seats: number;
   slotHint: string;
 }
 
@@ -75,7 +72,6 @@ export const DESTS: Destination[] = [
     tags: ["Beach", "Nightlife", "Touristic staples"],
     weather: "Hot",
     intensity: 2,
-    rating: "4.9",
     airline: "jetBlue",
     hotel: "Real Inn Cancún",
     room: "2 queen beds",
@@ -86,8 +82,6 @@ export const DESTS: Destination[] = [
     gradient: "linear-gradient(140deg,#22B5C9,#3FD0C2 48%,#F0C04A)",
     from: "CDMX",
     to: "CUN",
-    departsIn: 18,
-    seats: 4,
     slotHint: "Drop a Cancún photo",
   },
   {
@@ -99,7 +93,6 @@ export const DESTS: Destination[] = [
     tags: ["Beach", "Hidden", "Luxury"],
     weather: "Hot",
     intensity: 2,
-    rating: "4.8",
     airline: "Aeroméxico",
     hotel: "Habitas Tulum",
     room: "Jungle suite",
@@ -109,8 +102,6 @@ export const DESTS: Destination[] = [
     gradient: "linear-gradient(140deg,#0E9E8E,#5BC98A 55%,#E9D27E)",
     from: "CDMX",
     to: "CUN",
-    departsIn: 24,
-    seats: 6,
     slotHint: "Drop a Tulum photo",
   },
   {
@@ -122,7 +113,6 @@ export const DESTS: Destination[] = [
     tags: ["Good food", "Historic", "Hidden"],
     weather: "Perfect",
     intensity: 3,
-    rating: "4.9",
     airline: "Volaris",
     hotel: "Casa Antonieta",
     room: "Courtyard room",
@@ -133,8 +123,6 @@ export const DESTS: Destination[] = [
     gradient: "linear-gradient(140deg,#E8632B,#F0A027 55%,#F7C65A)",
     from: "CDMX",
     to: "OAX",
-    departsIn: 12,
-    seats: 8,
     slotHint: "Drop an Oaxaca photo",
   },
   {
@@ -146,7 +134,6 @@ export const DESTS: Destination[] = [
     tags: ["Historic", "Good food", "Nightlife", "Museums"],
     weather: "Perfect",
     intensity: 3,
-    rating: "4.7",
     airline: "TAP Air",
     hotel: "Memmo Alfama",
     room: "City-view king",
@@ -156,8 +143,6 @@ export const DESTS: Destination[] = [
     gradient: "linear-gradient(140deg,#F08A3C,#F2B25A 50%,#3FB6C9)",
     from: "CDMX",
     to: "LIS",
-    departsIn: 31,
-    seats: 5,
     slotHint: "Drop a Lisbon photo",
   },
   {
@@ -169,7 +154,6 @@ export const DESTS: Destination[] = [
     tags: ["Cruises", "Beach", "Luxury"],
     weather: "Hot",
     intensity: 1,
-    rating: "4.8",
     airline: "Fly + sail",
     hotel: "Ocean-view stateroom",
     room: "Balcony cabin",
@@ -180,8 +164,6 @@ export const DESTS: Destination[] = [
     gradient: "linear-gradient(140deg,#1577B8,#1FB0C9 55%,#7FD9CF)",
     from: "CDMX",
     to: "Port",
-    departsIn: 21,
-    seats: 3,
     slotHint: "Drop a cruise photo",
   },
   {
@@ -193,7 +175,6 @@ export const DESTS: Destination[] = [
     tags: ["Nature", "Activities"],
     weather: "Cold",
     intensity: 5,
-    rating: "4.9",
     airline: "LATAM",
     hotel: "EcoCamp domes",
     room: "Suite dome",
@@ -203,8 +184,6 @@ export const DESTS: Destination[] = [
     gradient: "linear-gradient(140deg,#1F8E6E,#4FB58C 55%,#9AD0C0)",
     from: "CDMX",
     to: "PUQ",
-    departsIn: 38,
-    seats: 4,
     slotHint: "Drop a Patagonia photo",
   },
 ];
@@ -233,8 +212,14 @@ export const HOW_IT_WORKS = [
   {
     n: "3",
     title: "Get a surprise package",
-    body: "A ready-to-book trip with the best deal for you.",
+    body: "Real flights and dates matched to your vibe — confirm the price on the provider's site.",
   },
 ];
 
-export const PROVIDER = "Expedia";
+/**
+ * Where the hand-off actually sends the user to book. The flight (the hook of
+ * every trip) deep-links to Aviasales — a Travelpayouts brand — so the named
+ * provider must be Aviasales, not a merchant we don't integrate with. (Hotel
+ * search uses Hotellook, also Travelpayouts; the flight link is always primary.)
+ */
+export const PROVIDER = "Aviasales";

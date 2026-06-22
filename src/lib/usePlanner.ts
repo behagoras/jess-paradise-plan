@@ -1,10 +1,19 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { DESTS, type Destination } from "./data";
 import { computeOptions } from "./scoring";
 import { computePricing, fmt, type Pricing } from "./pricing";
-import { GEN_PHASE_DELAYS } from "@/components/screens/Generating";
+import {
+  CITY_TO_IATA,
+  normalizeIata,
+  whenToDeparture,
+  windowFromFlight,
+  monthLabel,
+} from "./trip";
+import type { FlightOffer, HotelOffer } from "@/convex/travelpayouts";
 
 export { fmt };
 
@@ -23,11 +32,11 @@ export type Screen =
  *   Step 2 — Preference + weather chips, then "Surprise me".
  *
  * Which fields actually affect Results lives in `src/lib/scoring.ts`; pricing
- * lives in `src/lib/pricing.ts`. `general`, `weather`, `intensity`, `budget`,
- * and the trip-length range (`daysMin`/`daysMax`) drive the Results set.
- * `departure`, `packages`, `vacation`, and `travelerTypes` are collected but
- * stay honest no-ops until live data exists.
- * TODO(live-data): departure filters origins once Amadeus search exists.
+ * is built from the REAL offers fetched in `surprise()` and assembled in
+ * `src/lib/pricing.ts`. `general`, `weather`, `intensity`, `budget`, and the
+ * trip-length range (`daysMin`/`daysMax`) pick the candidate destinations;
+ * `departure` → flight origin, `when` → departure date, `travelers` → adults,
+ * and the `packages` include-chips decide which lines we fetch & price.
  */
 export interface PlannerState {
   screen: Screen;
@@ -46,9 +55,6 @@ export interface PlannerState {
   general: string[];
   weather: string[];
   selected: number;
-  airlineIdx: number;
-  hotelIdx: number;
-  activityOn: boolean;
   genPhase: number;
 }
 
@@ -71,23 +77,57 @@ const INITIAL: PlannerState = {
   general: ["Beach", "Nightlife"],
   weather: ["Hot"],
   selected: 0,
-  airlineIdx: 0,
-  hotelIdx: 0,
-  activityOn: true,
   genPhase: 0,
 };
 
-/** Snapshot of everything derived from state — flights, hotels, totals, copy. */
-export interface PlannerComputed extends Pricing {
-  options: Destination[];
-  /** Filters yielded < 3 matches; Results was backfilled to keep 3 cards. */
-  widened: boolean;
+/**
+ * One real, fetched trip offer. `dest` is the catalog card it anchors (image,
+ * blurb, region copy); `flight`/`hotel` are the REAL fares the data
+ * layer returned (hotel may be null when Hotellook has nothing / is down).
+ * `catalog` is false for extra destinations surfaced via cheapest-anywhere,
+ * which have no curated card and render only the fields the API returned.
+ */
+export interface RealOffer {
   dest: Destination;
+  catalog: boolean;
+  flight: FlightOffer;
+  hotel: HotelOffer | null;
 }
+
+/** Snapshot of everything derived from state — the selected offer + pricing. */
+export interface PlannerComputed extends Pricing {
+  /** The fetched real offers (≤ 3), or [] before/after an empty search. */
+  offers: RealOffer[];
+  /** No live trips matched the chosen origin/filters — show the widen hint. */
+  empty: boolean;
+  /** Search hit an error (e.g. token/network) — show the widen hint. */
+  errored: boolean;
+  /** Filters yielded few catalog matches; results were backfilled. */
+  widened: boolean;
+  /** The currently selected offer, or null when there are none. */
+  offer: RealOffer | null;
+  /** Real outbound / return date labels for the selected offer. */
+  outDate: string | null;
+  retDate: string | null;
+  /** Real nights for the selected offer (from its flight window). */
+  nights: number | null;
+}
+
+/** How many real cards we aim to show. */
+const TARGET_CARDS = 3;
+/** Default hotel nights when a flight has no return leg to measure against. */
+const FALLBACK_NIGHTS = 3;
 
 export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
   const [state, setState] = useState<PlannerState>(INITIAL);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [offers, setOffers] = useState<RealOffer[]>([]);
+  const [empty, setEmpty] = useState(false);
+  const [errored, setErrored] = useState(false);
+  const [widened, setWidened] = useState(false);
+
+  const searchFlight = useAction(api.travelpayouts.searchCheapestFlight);
+  const searchDests = useAction(api.travelpayouts.searchCheapestDestinations);
+  const searchHotel = useAction(api.travelpayouts.searchHotel);
 
   const scrollTop = useCallback(() => {
     if (scrollRef?.current) scrollRef.current.scrollTop = 0;
@@ -140,30 +180,28 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
     });
   }, [scrollTop]);
 
-  const surprise = useCallback(() => {
-    patch({ screen: "generating", genPhase: 0 });
-    timers.current.forEach(clearTimeout);
-    // TODO(live-data): these timers are pure UX rhythm over synchronous
-    // scoring. They become a real async-search progress indicator once a live
-    // data source exists; see Generating.tsx copy.
-    timers.current = [
-      setTimeout(() => patch({ genPhase: 1 }), GEN_PHASE_DELAYS[0]),
-      setTimeout(() => patch({ genPhase: 2 }), GEN_PHASE_DELAYS[1]),
-      setTimeout(() => {
-        patch({ screen: "results" });
-        scrollTop();
-      }, GEN_PHASE_DELAYS[2]),
-    ];
-  }, [patch, scrollTop]);
+  /**
+   * Real async search. Scores the catalog (scoring.ts) to pick candidates,
+   * then fetches REAL flight + hotel for each from the chosen origin/date via
+   * the prompt-401 Convex actions. Candidates with no real fare are dropped
+   * (hide-missing); if fewer than 3 remain we backfill from cheapest-anywhere.
+   * `genPhase` advances on real awaits, not timers. Errors / no results land
+   * on Results with an honest widen hint.
+   */
+  const surprise = useCallback(async () => {
+    setState((s) => ({ ...s, screen: "generating", genPhase: 0, selected: 0 }));
+    setTimeout(scrollTop, 0);
+    setEmpty(false);
+    setErrored(false);
 
-  const nextStep = useCallback(() => {
-    if (state.step < WIZARD_STEPS) goStep(state.step + 1);
-    else surprise();
-  }, [state.step, goStep, surprise]);
+    const origin = CITY_TO_IATA[state.departure] ?? "MEX";
+    const departureAt = whenToDeparture(state.when);
+    const includeHotel = state.packages.includes("Hotel");
+    const includeFlight = state.packages.includes("Flight");
+    const adults = state.travelers;
 
-  // ---- selectors (thin: delegates to pure scoring + pricing modules) ----
-  const computed = useMemo<PlannerComputed>(() => {
-    const { options, widened } = computeOptions({
+    // Score the catalog to choose candidate destinations + their real IATAs.
+    const { options, widened: backfilled } = computeOptions({
       general: state.general,
       weather: state.weather,
       intensity: state.intensity,
@@ -171,30 +209,156 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
       daysMin: state.daysMin,
       daysMax: state.daysMax,
     });
-    const dest = options[state.selected] || DESTS[0];
-    const pricing = computePricing({
-      dest,
-      when: state.when,
-      airlineIdx: state.airlineIdx,
-      hotelIdx: state.hotelIdx,
-      activityOn: state.activityOn,
-      travelers: state.travelers,
-    });
-    return { options, widened, dest, ...pricing };
+
+    try {
+      // Phase 1 — fetch real flights for the catalog candidates in parallel.
+      const candidates = options
+        .map((dest) => ({ dest, iata: normalizeIata(dest.to) }))
+        .filter((c): c is { dest: Destination; iata: string } => !!c.iata);
+
+      const flightResults = await Promise.all(
+        candidates.map((c) =>
+          // If the user excluded flights we still need a flight to anchor the
+          // destination + real dates, but it won't be priced into the total.
+          searchFlight({ origin, destination: c.iata, departureAt })
+        )
+      );
+      setState((s) => ({ ...s, genPhase: 1 }));
+
+      const flighted: { dest: Destination; flight: FlightOffer }[] = [];
+      candidates.forEach((c, i) => {
+        const f = flightResults[i];
+        if (f) flighted.push({ dest: c.dest, flight: f });
+      });
+
+      // Backfill with cheapest-anywhere real destinations if we are short.
+      if (flighted.length < TARGET_CARDS) {
+        const extras = await searchDests({ origin, limit: 12 });
+        const seen = new Set(flighted.map((x) => x.flight.destination));
+        for (const f of extras) {
+          if (flighted.length >= TARGET_CARDS) break;
+          if (seen.has(f.destination)) continue;
+          seen.add(f.destination);
+          flighted.push({ dest: syntheticDest(f), flight: f });
+        }
+      }
+
+      const chosen = flighted.slice(0, TARGET_CARDS);
+
+      // Phase 2 — fetch a real hotel for each chosen destination over the real
+      // flight window. Hotellook may be null (down / no data) → hide-missing.
+      const hotelResults = await Promise.all(
+        chosen.map(({ dest, flight }) => {
+          if (!includeHotel) return Promise.resolve(null);
+          const win = windowFromFlight(flight, FALLBACK_NIGHTS);
+          return searchHotel({
+            destinationIata: flight.destination,
+            location: dest.region ? dest.name : undefined,
+            checkIn: win.checkIn,
+            checkOut: win.checkOut,
+            adults,
+          });
+        })
+      );
+      setState((s) => ({ ...s, genPhase: 2 }));
+
+      const built: RealOffer[] = chosen.map(({ dest, flight }, i) => ({
+        dest,
+        catalog: DESTS.some((d) => d.key === dest.key),
+        // When flights are excluded, keep the fetched flight only to source the
+        // destination + dates; the screens drop it from pricing via `packages`.
+        flight,
+        hotel: includeHotel ? hotelResults[i] : null,
+      }));
+
+      setOffers(built);
+      setWidened(backfilled || built.length < TARGET_CARDS);
+      setEmpty(built.length === 0);
+      // Keep `includeFlight` referenced for clarity even when always-fetched.
+      void includeFlight;
+      setState((s) => ({ ...s, screen: "results", selected: 0 }));
+      scrollTop();
+    } catch {
+      setOffers([]);
+      setEmpty(true);
+      setErrored(true);
+      setState((s) => ({ ...s, screen: "results", selected: 0 }));
+      scrollTop();
+    }
   }, [
+    state.departure,
+    state.when,
+    state.travelers,
+    state.packages,
     state.general,
     state.weather,
     state.intensity,
     state.budget,
     state.daysMin,
     state.daysMax,
-    state.selected,
-    state.when,
-    state.airlineIdx,
-    state.hotelIdx,
-    state.activityOn,
-    state.travelers,
+    searchFlight,
+    searchDests,
+    searchHotel,
+    scrollTop,
   ]);
+
+  const nextStep = useCallback(() => {
+    if (state.step < WIZARD_STEPS) goStep(state.step + 1);
+    else void surprise();
+  }, [state.step, goStep, surprise]);
+
+  // ---- selectors (thin: assemble pricing from the real selected offer) ----
+  const computed = useMemo<PlannerComputed>(() => {
+    const offer = offers[state.selected] ?? offers[0] ?? null;
+    const includeFlight = state.packages.includes("Flight");
+    const includeHotel = state.packages.includes("Hotel");
+
+    const win = offer ? windowFromFlight(offer.flight, FALLBACK_NIGHTS) : null;
+    const nights = win ? win.nights : null;
+
+    // Hotel offers are total-stay prices; convert to per-person for the trip.
+    const hotelPerPerson =
+      offer?.hotel?.priceFrom != null && state.travelers > 0
+        ? offer.hotel.priceFrom / state.travelers
+        : null;
+
+    const pricing = computePricing({
+      flight:
+        offer && includeFlight
+          ? {
+              name: offer.flight.airlineName ?? offer.flight.airline,
+              price: offer.flight.price,
+            }
+          : null,
+      hotel:
+        offer && includeHotel && offer.hotel && hotelPerPerson != null
+          ? {
+              name: offer.hotel.hotelName,
+              room: offer.hotel.hotelName,
+              price: hotelPerPerson,
+            }
+          : null,
+      // No live activity price source exists → always null (hide the line).
+      activity: null,
+      travelers: state.travelers,
+      currency: offer?.flight.currency ?? "usd",
+    });
+
+    return {
+      offers,
+      empty,
+      errored,
+      widened,
+      offer,
+      outDate: offer ? monthLabel(offer.flight.departureAt) : null,
+      retDate:
+        offer && offer.flight.returnAt
+          ? monthLabel(offer.flight.returnAt)
+          : null,
+      nights,
+      ...pricing,
+    };
+  }, [offers, empty, errored, widened, state.selected, state.packages, state.travelers]);
 
   return {
     state,
@@ -208,6 +372,36 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
     prevStep,
     nextStep,
     scrollTop,
+  };
+}
+
+/**
+ * Build a minimal catalog-shaped card for a cheapest-anywhere destination that
+ * has no curated entry. Only the fields the API actually returned get real
+ * values; the rest are neutral placeholders for layout (no fake price/scarcity).
+ */
+function syntheticDest(f: FlightOffer): Destination {
+  const name = f.destinationCity ?? f.destination;
+  const region = f.destinationCountry ?? "";
+  return {
+    key: `live-${f.destination}`,
+    name,
+    imageSrc: "",
+    region,
+    nights: 0,
+    tags: [],
+    weather: "",
+    intensity: 0,
+    airline: f.airlineName ?? f.airline,
+    hotel: "",
+    room: "",
+    activity: "",
+    actDesc: "",
+    blurb: "",
+    gradient: "linear-gradient(140deg,#22B5C9,#3FD0C2 48%,#F0C04A)",
+    from: f.origin,
+    to: f.destination,
+    slotHint: `Drop a ${name} photo`,
   };
 }
 
