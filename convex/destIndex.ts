@@ -779,14 +779,18 @@ export const getDestIndex = action({
       }
     }
 
-    // Fire-and-forget enrichment, staggered so we never hammer Wikidata.
-    toEnrich.forEach((iata, i) => {
-      void ctx.scheduler.runAfter(
-        i * 250,
-        internal.destIndex.enrichDestination,
-        { iata }
-      );
-    });
+    // Staggered enrichment so we never hammer Wikidata. AWAIT the scheduling:
+    // ctx.scheduler.runAfter resolves once the job is ENQUEUED (not when the
+    // enrichment runs), so awaiting guarantees the jobs are committed before the
+    // action returns. A bare `void` leaves them as dangling promises that Convex
+    // drops when the action finishes, so the index would never fill in prod.
+    await Promise.all(
+      toEnrich.map((iata, i) =>
+        ctx.scheduler.runAfter(i * 250, internal.destIndex.enrichDestination, {
+          iata,
+        })
+      )
+    );
 
     return out;
   },
