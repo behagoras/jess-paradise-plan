@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { fmt, type PlannerApi } from "@/lib/usePlanner";
@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
+const AVIASALES = "https://www.aviasales.com";
+
 export function HandoffSheet({ planner }: { planner: PlannerApi }) {
   const { computed, state, go } = planner;
-  const { dest, provider, grand, travelersLabel } = computed;
+  const { offer, provider, grand, perPerson, travelersLabel } = computed;
   const { isAuthenticated } = useConvexAuth();
   const guestId = useGuestId();
   const saveTrip = useMutation(api.trips.save);
@@ -24,6 +26,15 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
   const [saving, setSaving] = useState(false);
 
   const close = () => go("detail");
+
+  // No real offer to hand off (empty/errored search) — bounce to results,
+  // which renders the honest widen hint. Render nothing rather than a fake.
+  useEffect(() => {
+    if (!offer) go("results");
+  }, [offer, go]);
+  if (!offer) return null;
+
+  const dest = offer.dest;
 
   const confirm = async () => {
     setSaving(true);
@@ -33,11 +44,11 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
       region: dest.region,
       provider,
       travelers: state.travelers,
-      total: Math.round(computed.grand),
-      perPerson: Math.round(computed.perPerson),
+      total: Math.round(grand),
+      perPerson: Math.round(perPerson),
       when: state.when,
       departure: state.departure,
-      activityOn: state.activityOn,
+      activityOn: false, // no live activity source yet — never persist a fake one
     };
     try {
       // Browsing history (NOT a booking): record what the visitor handed off
@@ -49,11 +60,25 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
       // Soft-fail: the hand-off proceeds regardless of the history write.
     } finally {
       // Affiliate-only model: we never take payment — we deep-link out to the
-      // provider so the user books there. TODO(live-data): replace with the
-      // real Travelpayouts/affiliate deep link (with our affiliate marker)
-      // once the partner program is set up.
-      const query = encodeURIComponent(`${dest.name} ${dest.region}`);
-      const affiliateDeepLink = `https://www.expedia.com/Hotel-Search?destination=${query}`;
+      // provider so the user books there, with our marker for attribution. The
+      // marker is the public Travelpayouts account id (safe to ship via
+      // NEXT_PUBLIC); the API token for live data stays server-side in Convex.
+      // Prefer the REAL flight deep link the API returned; fall back to a
+      // Hotellook destination search for the real destination.
+      const marker = process.env.NEXT_PUBLIC_TP_MARKER ?? "";
+      const flightLink = offer.flight.link
+        ? AVIASALES + offer.flight.link
+        : null;
+      const query = encodeURIComponent(
+        [dest.name, dest.region].filter(Boolean).join(" ")
+      );
+      const fallback =
+        `https://search.hotellook.com/?destination=${query}` +
+        (marker ? `&marker=${marker}` : "");
+      const affiliateDeepLink =
+        flightLink && marker
+          ? `${flightLink}${flightLink.includes("?") ? "&" : "?"}marker=${marker}`
+          : (flightLink ?? fallback);
       window.open(affiliateDeepLink, "_blank", "noopener,noreferrer");
       setSaving(false);
       go("detail");

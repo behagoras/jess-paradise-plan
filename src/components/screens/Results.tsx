@@ -1,25 +1,35 @@
 "use client";
 
-import { DEST_BASE } from "@/lib/data";
-import { fmt, type PlannerApi } from "@/lib/usePlanner";
+import { fmt, type PlannerApi, type RealOffer } from "@/lib/usePlanner";
+import { windowFromFlight, monthLabel } from "@/lib/trip";
 import { ImageSlot } from "../ImageSlot";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+/** Real per-person price for a single offer card, respecting the include set. */
+function cardPerPerson(
+  o: RealOffer,
+  travelers: number,
+  includeFlight: boolean,
+  includeHotel: boolean
+): number {
+  let total = 0;
+  if (includeFlight) total += o.flight.price;
+  if (includeHotel && o.hotel?.priceFrom != null && travelers > 0)
+    total += o.hotel.priceFrom / travelers;
+  return total;
+}
+
 export function Results({ planner }: { planner: PlannerApi }) {
-  const { computed, go, patch, scrollTop } = planner;
-  const { options, disc, widened } = computed;
+  const { computed, state, go, patch, scrollTop } = planner;
+  const { offers, widened, empty, errored } = computed;
+  const includeFlight = state.packages.includes("Flight");
+  const includeHotel = state.packages.includes("Hotel");
 
   const select = (i: number) => {
-    patch({
-      selected: i,
-      screen: "detail",
-      airlineIdx: 0,
-      hotelIdx: 0,
-      activityOn: true,
-    });
+    patch({ selected: i, screen: "detail" });
     setTimeout(scrollTop, 0);
   };
 
@@ -35,36 +45,48 @@ export function Results({ planner }: { planner: PlannerApi }) {
         </button>
         <div>
           <div className="font-display text-[21px] font-extrabold tracking-[-.01em]">
-            {options.length} surprise trips
+            {offers.length === 1
+              ? "1 surprise trip"
+              : `${offers.length} surprise trips`}
           </div>
           <div className="text-[13px] text-ink-soft">
-            Matched to your vibe and budget
+            Live fares from {state.departure}
           </div>
         </div>
       </div>
 
-      {widened && (
+      {(widened || empty || errored) && (
         <div className="mt-2 rounded-[14px] border border-line bg-surface2 px-4 py-3 text-[12.5px] font-semibold leading-[1.5] text-ink-soft">
-          Few trips fit your filters — widen your budget or trip length to see
-          more. Showing the closest matches below.
+          {empty
+            ? "No live trips matched your filters from this departure point — widen your budget or trip length, or pick another departure city, to see more."
+            : "Few live trips fit your filters — widen your budget or trip length to see more. Showing the closest live fares below."}
         </div>
       )}
 
       <div className="grid gap-4 pt-2 lg:grid-cols-2 xl:grid-cols-3">
-        {options.map((o, i) => {
-          const b = DEST_BASE[o.key];
-          const from = Math.round(b * (1 - disc));
+        {offers.map((o, i) => {
+          const dest = o.dest;
           const best = i === 0;
+          const perPerson = cardPerPerson(
+            o,
+            state.travelers,
+            includeFlight,
+            includeHotel
+          );
+          const win = windowFromFlight(o.flight, dest.nights || 3);
+          const dateWindow = `${monthLabel(o.flight.departureAt)}${
+            o.flight.returnAt ? ` – ${monthLabel(o.flight.returnAt)}` : ""
+          }`;
           return (
             <Card
-              key={o.key}
+              key={dest.key}
               className="gap-0 overflow-hidden rounded-[24px] border-line py-0 shadow-[0_12px_28px_-20px_rgba(40,28,16,.5)]"
             >
               <div
                 className="relative h-[188px]"
-                style={{ background: o.gradient }}
+                style={{ background: dest.gradient }}
               >
-                <ImageSlot src={o.imageSrc} placeholder={o.slotHint} />
+                <ImageSlot src={dest.imageSrc} placeholder={dest.slotHint} />
                 <div
                   className="pointer-events-none absolute inset-0"
                   style={{
@@ -72,61 +94,59 @@ export function Results({ planner }: { planner: PlannerApi }) {
                       "linear-gradient(to top,rgba(20,12,6,.62),rgba(20,12,6,0) 55%)",
                   }}
                 />
-                <div className="pointer-events-none absolute left-[13px] top-[13px] flex gap-[7px]">
-                  <Badge
-                    className={
-                      "rounded-full px-[11px] py-1.5 text-[11.5px] font-extrabold " +
-                      (best
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-white/90 text-ink")
-                    }
-                  >
-                    {best ? "Best match" : "Great deal"}
-                  </Badge>
-                  <Badge className="rounded-full bg-white/90 px-2.5 py-1.5 text-[11.5px] font-extrabold text-ink">
-                    −{Math.round(disc * 100)}%
-                  </Badge>
-                </div>
+                {best && (
+                  <div className="pointer-events-none absolute left-[13px] top-[13px] flex gap-[7px]">
+                    <Badge className="rounded-full bg-primary px-[11px] py-1.5 text-[11.5px] font-extrabold text-primary-foreground">
+                      Best match
+                    </Badge>
+                  </div>
+                )}
                 <div className="pointer-events-none absolute inset-x-[15px] bottom-[13px] flex items-end justify-between">
                   <div>
                     <div className="font-display text-[23px] font-extrabold text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]">
-                      {o.name}
+                      {dest.name}
                     </div>
-                    <div className="text-[12.5px] font-semibold text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">
-                      {o.region}
+                    {dest.region && (
+                      <div className="text-[12.5px] font-semibold text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">
+                        {dest.region}
+                      </div>
+                    )}
+                  </div>
+                  {dest.rating && (
+                    <div className="flex items-center gap-1 rounded-full bg-white/90 px-[9px] py-[5px] text-xs font-extrabold text-ink">
+                      <span className="text-star">★</span>
+                      {dest.rating}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 rounded-full bg-white/90 px-[9px] py-[5px] text-xs font-extrabold text-ink">
-                    <span className="text-star">★</span>
-                    {o.rating}
-                  </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-1 flex-col px-[17px] pb-[17px] pt-[15px]">
-                <p className="mb-[13px] text-sm leading-[1.45] text-ink">
-                  {o.blurb}
-                </p>
+                {dest.blurb && (
+                  <p className="mb-[13px] text-sm leading-[1.45] text-ink">
+                    {dest.blurb}
+                  </p>
+                )}
                 <div className="mb-[15px] flex flex-col gap-2">
-                  <Row icon="✈" label="Flight" value={o.airline} />
-                  <Row icon="⌂" label="Stay" value={o.hotel} />
-                  <Row icon="♪" label="Do" value={o.activity} />
+                  {includeFlight && (
+                    <Row
+                      icon="✈"
+                      label="Flight"
+                      value={o.flight.airlineName ?? o.flight.airline}
+                    />
+                  )}
+                  {includeHotel && o.hotel && (
+                    <Row icon="⌂" label="Stay" value={o.hotel.hotelName} />
+                  )}
                 </div>
                 <Separator className="mt-auto bg-line" />
                 <div className="flex items-center justify-between pt-[13px]">
                   <div>
-                    {/* Honest, static descriptor — no fake countdown or
-                        "seats left" inventory. TODO(live-data): show real
-                        departure windows + availability once a live flight
-                        search backs this. */}
                     <div className="text-[11px] font-bold text-ink-soft">
-                      {o.nights} nights · {o.region}
+                      {win.nights} nights · {dateWindow}
                     </div>
                     <div className="flex items-baseline gap-[7px]">
-                      <span className="text-xs text-ink-soft line-through">
-                        {fmt(b)}
-                      </span>
                       <span className="font-display text-[21px] font-extrabold text-ink">
-                        {fmt(from)}
+                        {fmt(perPerson)}
                       </span>
                       <span className="text-[11px] font-semibold text-ink-soft">
                         /person
@@ -147,7 +167,7 @@ export function Results({ planner }: { planner: PlannerApi }) {
       </div>
 
       <div className="mt-5 text-center text-xs leading-[1.5] text-ink-soft">
-        Prices shown are &quot;from&quot; estimates.
+        Live cached fares — indicative and a few hours old.
         <br />
         Final price is confirmed on the provider&apos;s site.
       </div>

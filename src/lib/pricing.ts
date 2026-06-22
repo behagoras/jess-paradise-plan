@@ -1,126 +1,111 @@
 /**
- * Pure pricing math for a selected destination. Zero React / zero IO.
+ * Pure pricing math for a selected trip, built ONLY from real line items the
+ * Travelpayouts data layer returned (see `convex/travelpayouts.ts`). Zero React,
+ * zero IO — the planner fetches the offers and hands them in here.
  *
- * Extracted from the old `usePlanner` god object so the numbers can be reasoned
- * about (and unit-tested) in isolation. `usePlanner` stays a thin coordinator.
- *
- * All ratios below are multipliers against a destination's `base` price
- * (`DEST_BASE[key]`, USD). `base` denominates a notional all-in seed price per
- * person for the trip; the component ratios slice that seed into flight / hotel
- * / activity line items and then apply the discount + tax. These are seed
- * values transcribed from the prototype's `renderVals()` — not live quotes.
- *
- * TODO(live-data): once Amadeus / Travelpayouts are wired, flight and hotel
- * prices become real per-leg quotes and these ratios disappear.
+ * Hide-missing rule (carried from the data layer): if a line item is null we do
+ * NOT fabricate it. No ratios, no seed base, no fake discount, no bolted-on tax.
+ * A trip's per-person price is the sum of the REAL lines the user included and
+ * the API actually returned. Showing fewer lines is correct behaviour.
  */
 
-import { DEST_BASE, PROVIDER, type Destination } from "./data";
-
-// ---- pricing constants (named magic numbers) ----------------------------
-
-/** Discount applied when the traveler keeps dates "Flexible". */
-export const FLEXIBLE_DISCOUNT = 0.34;
-/** Discount applied when the traveler commits to a specific month (early bird). */
-export const EARLY_BIRD_DISCOUNT = 0.16;
-
-/** Flight price as a fraction of base, per airline option (index 0 = default). */
-export const FLIGHT_RATIOS = [0.46, 0.36, 0.58];
-/** Hotel price as a fraction of base, per hotel option (index 0 = default). */
-export const HOTEL_RATIOS = [0.4, 0.64, 0.27];
-/** Activity price as a fraction of base. */
-export const ACTIVITY_RATIO = 0.16;
-/** Taxes & fees applied to the post-discount subtotal. */
-export const TAX_RATE = 0.16;
+import { PROVIDER } from "./data";
 
 export const fmt = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 
+/** A single real, included, priced line item (flight / hotel / activity). */
+export interface PriceLine {
+  kind: "flight" | "hotel" | "activity";
+  /** Display label, e.g. "Flight · Volaris" or "Hotel · Jungle suite". */
+  k: string;
+  /** Real per-person amount in `currency`. */
+  amount: number;
+  color: string;
+}
+
 export interface PricingInput {
-  dest: Destination;
-  when: string;
-  airlineIdx: number;
-  hotelIdx: number;
-  activityOn: boolean;
+  /** Real flight per-person price, or null if none returned / not included. */
+  flight: { name: string; price: number } | null;
+  /**
+   * Real hotel per-person price for the stay, or null if none returned / down /
+   * not included. (Hotellook prices are total-stay; the planner divides by pax.)
+   */
+  hotel: { name: string; room: string; price: number } | null;
+  /** Real activity per-person price, or null — we have NO live activity source. */
+  activity: { name: string; price: number } | null;
   travelers: number;
+  currency: string;
 }
 
 export interface Pricing {
-  disc: number;
-  base: number;
-  air: { name: string; price: number };
-  hot: { name: string; room: string; price: number };
-  actPrice: number;
-  subtotal: number;
-  discAmt: number;
-  taxes: number;
+  /** The real, included, priced lines — only what the API actually returned. */
+  lines: PriceLine[];
+  /** Sum of the real per-person lines. */
   perPerson: number;
+  /** perPerson × travelers. */
   grand: number;
   travelersLabel: string;
   provider: string;
+  currency: string;
+  /** Convenience breakdown for the Detail screen (lines as {k, v, color}). */
   breakdown: { k: string; v: string; color: string }[];
+  /** True when at least one priced line exists (the trip has a real number). */
+  hasPrice: boolean;
 }
 
-/** Compute every derived price line for one destination + selection. Pure. */
+/**
+ * Compute the per-person + grand total from real line items. Pure.
+ * Only the lines that are non-null (real + included) contribute.
+ */
 export function computePricing({
-  dest,
-  when,
-  airlineIdx,
-  hotelIdx,
-  activityOn,
+  flight,
+  hotel,
+  activity,
   travelers,
+  currency,
 }: PricingInput): Pricing {
-  const base = DEST_BASE[dest.key];
-  const disc = when === "Flexible" ? FLEXIBLE_DISCOUNT : EARLY_BIRD_DISCOUNT;
-
-  const airlines = [
-    { name: dest.airline, price: base * FLIGHT_RATIOS[0] },
-    { name: "Volaris", price: base * FLIGHT_RATIOS[1] },
-    { name: "Delta", price: base * FLIGHT_RATIOS[2] },
-  ];
-  const hotels = [
-    { name: dest.hotel, room: dest.room, price: base * HOTEL_RATIOS[0] },
-    { name: "Beachfront Suite", room: "King, ocean view", price: base * HOTEL_RATIOS[1] },
-    { name: "Casa Boutique", room: "Garden room", price: base * HOTEL_RATIOS[2] },
-  ];
-  const air = airlines[airlineIdx];
-  const hot = hotels[hotelIdx];
-  const actPrice = base * ACTIVITY_RATIO;
-  const subtotal = air.price + hot.price + (activityOn ? actPrice : 0);
-  const discAmt = subtotal * disc;
-  const taxes = (subtotal - discAmt) * TAX_RATE;
-  const perPerson = subtotal - discAmt + taxes;
-  const grand = perPerson * travelers;
-  const travelersLabel = travelers + (travelers === 1 ? " traveler" : " travelers");
-
-  const breakdown: { k: string; v: string; color: string }[] = [
-    { k: "Flight · " + air.name, v: fmt(air.price), color: "var(--ink)" },
-    { k: "Hotel · " + hot.room, v: fmt(hot.price), color: "var(--ink)" },
-  ];
-  if (activityOn)
-    breakdown.push({
-      k: "Activity · " + dest.activity,
-      v: fmt(actPrice),
+  const lines: PriceLine[] = [];
+  if (flight)
+    lines.push({
+      kind: "flight",
+      k: "Flight · " + flight.name,
+      amount: flight.price,
       color: "var(--ink)",
     });
-  breakdown.push({
-    k: when === "Flexible" ? "Flexibility discount" : "Early-bird discount",
-    v: "−" + fmt(discAmt),
-    color: "var(--palm)",
-  });
-  breakdown.push({ k: "Taxes & fees", v: fmt(taxes), color: "var(--ink)" });
+  if (hotel)
+    lines.push({
+      kind: "hotel",
+      k: "Hotel · " + hotel.room,
+      amount: hotel.price,
+      color: "var(--ink)",
+    });
+  if (activity)
+    lines.push({
+      kind: "activity",
+      k: "Activity · " + activity.name,
+      amount: activity.price,
+      color: "var(--ink)",
+    });
+
+  const perPerson = lines.reduce((sum, l) => sum + l.amount, 0);
+  const grand = perPerson * travelers;
+  const travelersLabel =
+    travelers + (travelers === 1 ? " traveler" : " travelers");
+
+  const breakdown = lines.map((l) => ({
+    k: l.k,
+    v: fmt(l.amount),
+    color: l.color,
+  }));
 
   return {
-    disc,
-    base,
-    air,
-    hot,
-    actPrice,
-    subtotal,
-    discAmt,
-    taxes,
+    lines,
     perPerson,
     grand,
     travelersLabel,
     provider: PROVIDER,
+    currency,
     breakdown,
+    hasPrice: lines.length > 0,
   };
 }
