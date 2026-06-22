@@ -4,16 +4,26 @@ import { useCallback, useMemo, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { DESTS, type Destination } from "./data";
-import { computeOptions } from "./scoring";
+import {
+  scoreVibe,
+  buildCostModel,
+  bandAndShuffle,
+  BUDGET_TOLERANCE,
+  type CostModel,
+  type ScoringInput,
+} from "./scoring";
 import { computePricing, fmt, type Pricing } from "./pricing";
 import {
   CITY_TO_IATA,
   normalizeIata,
-  whenToDeparture,
   windowFromFlight,
   monthLabel,
+  whenToDeparture,
 } from "./trip";
-import type { FlightOffer, HotelOffer } from "@/convex/travelpayouts";
+import type { FlightOffer } from "@/convex/travelpayouts";
+import type { HotelLiteOffer } from "@/convex/liteapi";
+import type { ActivityOffer } from "@/convex/viator";
+import type { DestVibe } from "@/convex/destIndex";
 
 export { fmt };
 
@@ -27,9 +37,9 @@ export type Screen =
 
 /**
  * The wizard is a 2-step filter layer (see ADR in README):
- *   Step 1 — When + Activity intensity (the two inputs that drive output),
+ *   Step 1 - When + Activity intensity (the two inputs that drive output),
  *            plus an optional, collapsed "More filters" group.
- *   Step 2 — Preference + weather chips, then "Surprise me".
+ *   Step 2 - Preference + weather chips, then "Surprise me".
  *
  * Which fields actually affect Results lives in `src/lib/scoring.ts`; pricing
  * is built from the REAL offers fetched in `surprise()` and assembled in
@@ -67,7 +77,7 @@ const INITIAL: PlannerState = {
   departure: "Mexico City",
   when: "Flexible",
   travelers: 2,
-  budget: 1800,
+  budget: 25000,
   packages: ["Flight", "Hotel", "Activity"],
   vacation: ["Friends", "Adventure"],
   travelerTypes: ["Adult"],
@@ -81,26 +91,38 @@ const INITIAL: PlannerState = {
 };
 
 /**
- * One real, fetched trip offer. `dest` is the catalog card it anchors (image,
- * blurb, region copy); `flight`/`hotel` are the REAL fares the data
- * layer returned (hotel may be null when Hotellook has nothing / is down).
- * `catalog` is false for extra destinations surfaced via cheapest-anywhere,
- * which have no curated card and render only the fields the API returned.
+ * One real, fetched trip offer surfaced by the reverse search. The candidate
+ * source is the cheapest-anywhere FEED, so `flight` is always a REAL round-trip
+ * fare. `dest` is the curated catalog card when this destination's IATA matched
+ * an entry (image/blurb/tags/weather/intensity), else an honest `syntheticDest`
+ * with only the fields the API returned. `catalog` records which it is.
+ *
+ * The Results grid is flight-first: `hotel` and `activity` are NOT fetched for
+ * every candidate (that would be ~60 external calls per search). They are filled
+ * LAZILY for the SELECTED offer when Detail opens (see `enrichSelected`): `hotel`
+ * is the REAL LiteAPI rate or null, `activity` is the REAL Viator product or
+ * null (hide-missing on either). `enriched` flips true once that lazy fetch has
+ * run for this offer so we don't re-fetch. `cost` is the per-person cost model
+ * assembled from the lines we actually have, carrying a `confidence` label so
+ * nothing reads as bookable.
  */
 export interface RealOffer {
   dest: Destination;
   catalog: boolean;
   flight: FlightOffer;
-  hotel: HotelOffer | null;
+  hotel: HotelLiteOffer | null;
+  activity: ActivityOffer | null;
+  enriched: boolean;
+  cost: CostModel;
 }
 
-/** Snapshot of everything derived from state — the selected offer + pricing. */
+/** Snapshot of everything derived from state - the selected offer + pricing. */
 export interface PlannerComputed extends Pricing {
-  /** The fetched real offers (≤ 3), or [] before/after an empty search. */
+  /** The fetched real offers (up to 30), or [] before/after an empty search. */
   offers: RealOffer[];
-  /** No live trips matched the chosen origin/filters — show the widen hint. */
+  /** No live trips matched the chosen origin/filters - show the widen hint. */
   empty: boolean;
-  /** Search hit an error (e.g. token/network) — show the widen hint. */
+  /** Search hit an error (e.g. token/network) - show the widen hint. */
   errored: boolean;
   /** Filters yielded few catalog matches; results were backfilled. */
   widened: boolean;
@@ -113,8 +135,8 @@ export interface PlannerComputed extends Pricing {
   nights: number | null;
 }
 
-/** How many real cards we aim to show. */
-const TARGET_CARDS = 3;
+/** Upper bound on candidates pulled from the cheapest-anywhere feed. */
+const MAX_RESULTS = 30;
 /** Default hotel nights when a flight has no return leg to measure against. */
 const FALLBACK_NIGHTS = 3;
 
@@ -125,9 +147,17 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
   const [errored, setErrored] = useState(false);
   const [widened, setWidened] = useState(false);
 
-  const searchFlight = useAction(api.travelpayouts.searchCheapestFlight);
+  // The cheapest-anywhere FEED is the candidate source - each row already
+  // carries a real round-trip flight, so we never re-fetch a flight per dest.
   const searchDests = useAction(api.travelpayouts.searchCheapestDestinations);
-  const searchHotel = useAction(api.travelpayouts.searchHotel);
+  // Hotel (LiteAPI) + activity (Viator) are fetched LAZILY for the SELECTED
+  // offer when Detail opens - NOT eagerly for all ~30 candidates.
+  const searchHotelLite = useAction(api.liteapi.searchHotelLite);
+  const searchActivity = useAction(api.viator.searchActivity);
+  // The destination index supplies vibe (climate/geoTags) for ARBITRARY real
+  // destinations so synthetic (non-catalog) candidates can be ranked, not just
+  // dumped in the neutral band. It also lazily enqueues enrichment of unknowns.
+  const getDestIndex = useAction(api.destIndex.getDestIndex);
 
   const scrollTop = useCallback(() => {
     if (scrollRef?.current) scrollRef.current.scrollTop = 0;
@@ -181,12 +211,26 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
   }, [scrollTop]);
 
   /**
-   * Real async search. Scores the catalog (scoring.ts) to pick candidates,
-   * then fetches REAL flight + hotel for each from the chosen origin/date via
-   * the prompt-401 Convex actions. Candidates with no real fare are dropped
-   * (hide-missing); if fewer than 3 remain we backfill from cheapest-anywhere.
-   * `genPhase` advances on real awaits, not timers. Errors / no results land
-   * on Results with an honest widen hint.
+   * Real REVERSE search (Phase 1). The candidate source is the live
+   * cheapest-anywhere FEED - `searchCheapestDestinations` returns up to 30 real
+   * round-trip fares from the origin, and THOSE are the candidates (we never
+   * re-fetch a flight per destination). The 6-dest catalog is now only an
+   * enrichment overlay: a candidate whose IATA matches a curated entry anchors
+   * that card (image/blurb/tags/weather/intensity + a real vibe score); every
+   * other candidate renders an honest `syntheticDest` with NO fabricated vibe.
+   *
+   * Candidates are deduped by destination IATA, filtered by total-trip budget
+   * (the Results grid is flight-first → filter on the real round-trip flight
+   * price), then banded by vibe and shuffled so the order varies run-to-run
+   * without ever lifting a worse match/value above a clearly better one.
+   *
+   * IMPORTANT (Phase 2 architecture): we do NOT fetch hotel/activity for every
+   * candidate here - that would be ~60 external calls per search. Offers leave
+   * `surprise()` flight-only (`hotel`/`activity` null, `enriched:false`); the
+   * full total-trip cost (flight+hotel+activity, per person, with a confidence
+   * label) is completed LAZILY for the SELECTED offer in `enrichSelected` when
+   * Detail opens. `genPhase` advances on real awaits; errors / no results land
+   * on Results with the honest widen hint.
    */
   const surprise = useCallback(async () => {
     setState((s) => ({ ...s, screen: "generating", genPhase: 0, selected: 0 }));
@@ -195,87 +239,129 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
     setErrored(false);
 
     const origin = CITY_TO_IATA[state.departure] ?? "MEX";
-    const departureAt = whenToDeparture(state.when);
-    const includeHotel = state.packages.includes("Hotel");
-    const includeFlight = state.packages.includes("Flight");
-    const adults = state.travelers;
-
-    // Score the catalog to choose candidate destinations + their real IATAs.
-    const { options, widened: backfilled } = computeOptions({
+    const scoringInput: ScoringInput = {
       general: state.general,
       weather: state.weather,
       intensity: state.intensity,
       budget: state.budget,
       daysMin: state.daysMin,
       daysMax: state.daysMax,
-    });
+    };
+
+    // Catalog enrichment overlay: real-destination IATA → curated card.
+    const catalogByIata = new Map<string, Destination>();
+    for (const d of DESTS) {
+      const iata = normalizeIata(d.to);
+      if (iata && !catalogByIata.has(iata)) catalogByIata.set(iata, d);
+    }
+
+    // "When" → real departure month constraint. A named month chip yields a
+    // "YYYY-MM" that constrains the feed; "Flexible"/"This summer" → undefined
+    // (let TP pick the cheapest upcoming date).
+    const departureAt = whenToDeparture(state.when);
 
     try {
-      // Phase 1 — fetch real flights for the catalog candidates in parallel.
-      const candidates = options
-        .map((dest) => ({ dest, iata: normalizeIata(dest.to) }))
-        .filter((c): c is { dest: Destination; iata: string } => !!c.iata);
-
-      const flightResults = await Promise.all(
-        candidates.map((c) =>
-          // If the user excluded flights we still need a flight to anchor the
-          // destination + real dates, but it won't be priced into the total.
-          searchFlight({ origin, destination: c.iata, departureAt })
-        )
-      );
+      // Phase 1 - the live cheapest-anywhere feed IS the candidate set, now
+      // optionally constrained to the chosen departure month.
+      const feed = await searchDests({
+        origin,
+        limit: MAX_RESULTS,
+        departureAt,
+        currency: "mxn",
+      });
       setState((s) => ({ ...s, genPhase: 1 }));
 
-      const flighted: { dest: Destination; flight: FlightOffer }[] = [];
-      candidates.forEach((c, i) => {
-        const f = flightResults[i];
-        if (f) flighted.push({ dest: c.dest, flight: f });
-      });
-
-      // Backfill with cheapest-anywhere real destinations if we are short.
-      if (flighted.length < TARGET_CARDS) {
-        const extras = await searchDests({ origin, limit: 12 });
-        const seen = new Set(flighted.map((x) => x.flight.destination));
-        for (const f of extras) {
-          if (flighted.length >= TARGET_CARDS) break;
-          if (seen.has(f.destination)) continue;
-          seen.add(f.destination);
-          flighted.push({ dest: syntheticDest(f), flight: f });
-        }
+      // Dedup by destination IATA first, then ask the destination index for
+      // vibe (climate/geoTags) on the synthetic candidates. The index call is
+      // non-blocking for unknowns (it lazily enqueues their enrichment so the
+      // NEXT search ranks them) and returns whatever is already cached.
+      const seen = new Set<string>();
+      const dedupedFeed: FlightOffer[] = [];
+      for (const flight of feed) {
+        if (seen.has(flight.destination)) continue;
+        seen.add(flight.destination);
+        // Budget is the TOTAL TRIP; Phase 1 only has the real round-trip flight
+        // price, so filter on that with the same tolerance the catalog used.
+        if (flight.price > state.budget * BUDGET_TOLERANCE) continue;
+        dedupedFeed.push(flight);
       }
 
-      const chosen = flighted.slice(0, TARGET_CARDS);
+      // Index lookup for the synthetic candidates' IATAs (curated ones already
+      // have real vibe data from the catalog). One action call for the batch.
+      const synthIatas = dedupedFeed
+        .filter((f) => !catalogByIata.has(f.destination))
+        .map((f) => f.destination);
+      let idx: Record<string, DestVibe | null> = {};
+      try {
+        idx =
+          synthIatas.length > 0 ? await getDestIndex({ iatas: synthIatas }) : {};
+      } catch {
+        idx = {}; // index unavailable → synthetic dests fall back to band -1
+      }
 
-      // Phase 2 — fetch a real hotel for each chosen destination over the real
-      // flight window. Hotellook may be null (down / no data) → hide-missing.
-      const hotelResults = await Promise.all(
-        chosen.map(({ dest, flight }) => {
-          if (!includeHotel) return Promise.resolve(null);
-          const win = windowFromFlight(flight, FALLBACK_NIGHTS);
-          return searchHotel({
-            destinationIata: flight.destination,
-            location: dest.region ? dest.name : undefined,
-            checkIn: win.checkIn,
-            checkOut: win.checkOut,
-            adults,
-          });
-        })
+      // Build candidates. Curated → real scoreVibe. Synthetic WITH index vibe →
+      // scored by the same math (catalog:false but a real vibe band). Synthetic
+      // with NO index data yet → band -1 ("vibe not known yet"), never faked.
+      type Candidate = {
+        dest: Destination;
+        catalog: boolean;
+        flight: FlightOffer;
+        vibe: number;
+        hasVibe: boolean; // true when this candidate has a real vibe to band on
+      };
+      const candidates: Candidate[] = dedupedFeed.map((flight) => {
+        const curated = catalogByIata.get(flight.destination);
+        if (curated) {
+          return {
+            dest: curated,
+            catalog: true,
+            flight,
+            vibe: scoreVibe(curated, scoringInput),
+            hasVibe: true,
+          };
+        }
+        const vibe = idx[flight.destination];
+        const hasVibe = !!vibe && (vibe.geoTags.length > 0 || vibe.climate != null);
+        return {
+          dest: syntheticDest(flight),
+          catalog: false,
+          flight,
+          vibe: hasVibe ? scoreVibeFromIndex(vibe!, scoringInput) : 0,
+          hasVibe,
+        };
+      });
+
+      // Band so vibe-matched dests (curated OR index-enriched) rank above ones
+      // we can't yet rank, but unknowns still appear; shuffle within each band
+      // for run-to-run variation. Candidates with a real vibe band by their
+      // score; candidates with NO vibe data yet → a single neutral "more
+      // options" band (-1), never fabricated as a poor match.
+      const ranked = bandAndShuffle(candidates, (c) =>
+        c.hasVibe ? c.vibe : -1
       );
+
+      // Flight-first: leave offers WITHOUT hotel/activity. Those are fetched
+      // lazily for the SELECTED offer in `enrichSelected` (Detail), so a search
+      // makes ~1 external call (the feed), not ~60. The Phase-1 cost model is
+      // flight-only here (a cached TP fare → confidence "cached"); the full
+      // flight+hotel+activity total is rebuilt on selection.
       setState((s) => ({ ...s, genPhase: 2 }));
 
-      const built: RealOffer[] = chosen.map(({ dest, flight }, i) => ({
-        dest,
-        catalog: DESTS.some((d) => d.key === dest.key),
-        // When flights are excluded, keep the fetched flight only to source the
-        // destination + dates; the screens drop it from pricing via `packages`.
-        flight,
-        hotel: includeHotel ? hotelResults[i] : null,
+      const built: RealOffer[] = ranked.map((c) => ({
+        dest: c.dest,
+        catalog: c.catalog,
+        flight: c.flight,
+        hotel: null,
+        activity: null,
+        enriched: false,
+        cost: buildCostModel({ flight: c.flight.price }, "cached"),
       }));
 
       setOffers(built);
-      setWidened(backfilled || built.length < TARGET_CARDS);
+      // "Widen" hint when the feed gave us nothing usable after filtering, or
+      // very few options - the honest "showing the closest live fares" copy.
+      setWidened(built.length > 0 && built.length < 3);
       setEmpty(built.length === 0);
-      // Keep `includeFlight` referenced for clarity even when always-fetched.
-      void includeFlight;
       setState((s) => ({ ...s, screen: "results", selected: 0 }));
       scrollTop();
     } catch {
@@ -288,19 +374,105 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
   }, [
     state.departure,
     state.when,
-    state.travelers,
-    state.packages,
     state.general,
     state.weather,
     state.intensity,
     state.budget,
     state.daysMin,
     state.daysMax,
-    searchFlight,
     searchDests,
-    searchHotel,
+    getDestIndex,
     scrollTop,
   ]);
+
+  /**
+   * LAZY enrichment for the SELECTED offer (Phase 2). Called when the user opens
+   * Detail for an offer that hasn't been enriched yet. Fetches its REAL hotel
+   * (LiteAPI, over the real flight window) and REAL activity (Viator, for the
+   * destination), attaches them, and rebuilds the per-person CostModel from the
+   * real lines we now have. This is the ONLY place hotel/activity are fetched -
+   * one offer at a time, cached server-side - so a search never makes ~60 calls.
+   *
+   * Honesty: each external result may be null (no data / unauthorized / no
+   * availability) → hide-missing. Hotel rates are total-stay → divided by adults
+   * for the per-person line; activity `fromPrice` is already per person.
+   * Confidence stays "cached" (indicative cached rates, never a bookable quote).
+   */
+  const enrichSelected = useCallback(
+    async (index: number) => {
+      const target = offers[index];
+      if (!target || target.enriched) return;
+
+      const includeHotel = state.packages.includes("Hotel");
+      const includeActivity = state.packages.includes("Activity");
+      const adults = state.travelers;
+      const flight = target.flight;
+      const dest = target.dest;
+      const win = windowFromFlight(flight, FALLBACK_NIGHTS);
+
+      // Geo-first for hotel when the curated/index card lacks a clean city name;
+      // otherwise resolve by city + country. Synthetic cards already carry the
+      // real destinationCity/Country from the feed via syntheticDest.
+      const city = flight.destinationCity ?? dest.name ?? undefined;
+      const countryCode = flight.destinationCountry ?? undefined;
+
+      const [hotel, activity] = await Promise.all([
+        includeHotel
+          ? searchHotelLite({
+              city: city ?? undefined,
+              countryCode: countryCode ?? undefined,
+              iataCode: flight.destination,
+              checkIn: win.checkIn,
+              checkOut: win.checkOut,
+              adults,
+              currency: "mxn",
+            }).catch(() => null)
+          : Promise.resolve(null),
+        includeActivity && city
+          ? searchActivity({
+              destinationName: city,
+              countryCode: countryCode ?? undefined,
+              currency: "mxn",
+            }).catch(() => null)
+          : Promise.resolve(null),
+      ]);
+
+      // Per-person lines from the REAL data. Hotel rates are total-stay → /adults.
+      const hotelPerPerson =
+        hotel?.priceFrom != null && adults > 0
+          ? hotel.priceFrom / adults
+          : undefined;
+      // Viator `fromPrice` is already a per-person "from" price.
+      const activityPerPerson =
+        activity?.priceFrom != null ? activity.priceFrom : undefined;
+
+      const cost = buildCostModel(
+        {
+          flight: flight.price,
+          hotel: hotelPerPerson,
+          activity: activityPerPerson,
+        },
+        "cached"
+      );
+
+      // Identity guard: a still-in-flight enrich must NOT stamp this
+      // destination's real hotel/activity onto a DIFFERENT destination that has
+      // since taken position `index` (a new surprise() replaces the whole
+      // array). Match on the captured destination IATA, not just the index, and
+      // only patch an offer that hasn't already been enriched.
+      const destIata = flight.destination;
+      setOffers((prev) =>
+        prev.map((o, i) =>
+          i === index &&
+          o.flight.destination === destIata &&
+          !o.enriched
+            ? { ...o, hotel, activity, enriched: true, cost }
+            : o
+        )
+      );
+    },
+    [offers, state.packages, state.travelers, searchHotelLite, searchActivity]
+  );
 
   const nextStep = useCallback(() => {
     if (state.step < WIZARD_STEPS) goStep(state.step + 1);
@@ -312,6 +484,7 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
     const offer = offers[state.selected] ?? offers[0] ?? null;
     const includeFlight = state.packages.includes("Flight");
     const includeHotel = state.packages.includes("Hotel");
+    const includeActivity = state.packages.includes("Activity");
 
     const win = offer ? windowFromFlight(offer.flight, FALLBACK_NIGHTS) : null;
     const nights = win ? win.nights : null;
@@ -338,10 +511,17 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
               price: hotelPerPerson,
             }
           : null,
-      // No live activity price source exists → always null (hide the line).
-      activity: null,
+      // Real Viator activity (lazily enriched on selection). Its `priceFrom` is
+      // already a per-person "from" price. Null until enriched / if none found.
+      activity:
+        offer && includeActivity && offer.activity
+          ? {
+              name: offer.activity.title,
+              price: offer.activity.priceFrom,
+            }
+          : null,
       travelers: state.travelers,
-      currency: offer?.flight.currency ?? "usd",
+      currency: offer?.flight.currency ?? "mxn",
     });
 
     return {
@@ -371,8 +551,29 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
     goStep,
     prevStep,
     nextStep,
+    enrichSelected,
     scrollTop,
   };
+}
+
+/**
+ * Vibe score for a SYNTHETIC (non-catalog) candidate, derived from the
+ * destination index instead of curated card fields. Uses the SAME math as
+ * `scoreVibe`: +2 per matched general tag present in the index `geoTags`, +1 if
+ * the index `climate` is one of the wizard's selected weathers. The intensity
+ * term is OMITTED (neutral) because we can't derive intensity from open data -
+ * we never fabricate it. RANKING ONLY; these tags are never displayed.
+ */
+function scoreVibeFromIndex(
+  vibe: DestVibe,
+  input: { general: string[]; weather: string[] }
+): number {
+  let sc = 0;
+  for (const g of input.general) {
+    if (vibe.geoTags.includes(g)) sc += 2;
+  }
+  if (vibe.climate && input.weather.includes(vibe.climate)) sc += 1;
+  return sc;
 }
 
 /**

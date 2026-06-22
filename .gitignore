@@ -165,3 +165,4 @@ handoff-build/paradise-plan-handoff/
 
 # Scratch
 tmp/
+.vercel

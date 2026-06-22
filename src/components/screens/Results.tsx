@@ -22,7 +22,7 @@ function cardPerPerson(
 }
 
 export function Results({ planner }: { planner: PlannerApi }) {
-  const { computed, state, go, patch, scrollTop } = planner;
+  const { computed, state, go, patch, scrollTop, enrichSelected } = planner;
   const { offers, widened, empty, errored } = computed;
   const includeFlight = state.packages.includes("Flight");
   const includeHotel = state.packages.includes("Hotel");
@@ -30,6 +30,9 @@ export function Results({ planner }: { planner: PlannerApi }) {
   const select = (i: number) => {
     patch({ selected: i, screen: "detail" });
     setTimeout(scrollTop, 0);
+    // Lazily fetch this offer's REAL hotel (LiteAPI) + activity (Viator) and
+    // rebuild its cost model - one offer at a time, only on selection.
+    void enrichSelected(i);
   };
 
   return (
@@ -57,8 +60,8 @@ export function Results({ planner }: { planner: PlannerApi }) {
       {(widened || empty || errored) && (
         <div className="mt-2 rounded-[14px] border border-line bg-surface2 px-4 py-3 text-[12.5px] font-semibold leading-[1.5] text-ink-soft">
           {empty
-            ? "No live trips matched your filters from this departure point — widen your budget or trip length, or pick another departure city, to see more."
-            : "Few live trips fit your filters — widen your budget or trip length to see more. Showing the closest live fares below."}
+            ? "No live trips matched your filters from this departure point - widen your budget or trip length, or pick another departure city, to see more."
+            : "Few live trips fit your filters - widen your budget or trip length to see more. Showing the closest live fares below."}
         </div>
       )}
 
@@ -158,7 +161,7 @@ export function Results({ planner }: { planner: PlannerApi }) {
       </div>
 
       <div className="mt-5 text-center text-xs leading-[1.5] text-ink-soft">
-        Live cached fares — indicative and a few hours old.
+        Live cached fares - indicative and a few hours old.
         <br />
         Final price is confirmed on the provider&apos;s site.
       </div>

@@ -27,24 +27,13 @@ Catalogo de proveedores de inventario y APIs relevantes para el proyecto, ordena
 
 ---
 
-## Amadeus Self-Service: motor tecnico de discovery
+## Amadeus Self-Service: DESCONTINUADO (ya no accesible)
 
-**Que es:** APIs REST/JSON del GDS Amadeus para negocios sin certificacion de agencia. Catalogo de ~30 APIs en 2025, enfocadas en tarifas publicas (excluye American, Delta, British Airways y low-cost; ese contenido es Amadeus Enterprise).
+> ⚠️ **Actualizacion 2026-06-21:** Amadeus **retiro su API publica "Self-Service for Developers"** (alta self-service, sandbox y cuota gratuita). Hoy Amadeus **solo** ofrece su API **business/enterprise**, que exige contrato comercial y, por lo general, volumen y/o acreditacion. **Amadeus deja de ser una fuente accesible para este proyecto.** Lo que sigue se conserva como contexto historico, NO como ruta viable.
 
-**Requiere acreditacion IATA:** no.
+**Consecuencia para Paradise Plan:** los endpoints de inspiracion en los que se apoyaba el motor de discovery (`Flight Inspiration Search`, `Flight Cheapest Date Search`) **ya no estan disponibles sin contrato enterprise**. La **unica** fuente de inspiracion de vuelos con acceso hoy es **[[#Travelpayouts]]** (Data API: `v2/prices/latest?origin=MEX` y endpoints relacionados). El patron "destino abierto + fechas flexibles + precio tope" se construye **sobre Travelpayouts**.
 
-**Costo/modelo:** pay-as-you-go. Sandbox gratis. En produccion mantiene cuota mensual gratuita por API (1,000 a 10,000 llamadas segun endpoint) y cobra el excedente a ~$0.0008-0.024 USD por transaccion segun API. Rate limit sandbox: hasta 10 req/usuario/seg.
-
-**Como darse de alta:** crear cuenta en developers.amadeus.com, registrar la app y recibir API Key + API Secret. SDKs en Node, Python, Java. Paso a produccion gratis.
-
-**Los dos endpoints clave para destino abierto:**
-
-- **Flight Inspiration Search** (`shopping.flightDestinations`): parametro obligatorio: IATA de origen (ej. MEX). Devuelve un listado de destinos ordenados por precio, filtrable por fecha de salida, one-way/round-trip, duracion del viaje, escalas y `maxPrice`. Resuelve "destino abierto + precio tope".
-- **Flight Cheapest Date Search** (`shopping.flightDates`): dado origen y destino, devuelve las fechas mas baratas con precios, ordenable por precio/fecha/duracion, con filtros de rango de fechas, duracion y `maxPrice`. Resuelve "fechas flexibles / calendario de precios".
-
-**Limitacion critica de ambos endpoints:** usan **datos cacheados dinamicos** generados diariamente a partir de busquedas y reservas pasadas. No es precio en vivo. La cobertura se limita a lo "trending" (rutas con poca demanda pueden faltar). Una vez elegido destino/fecha, hay que llamar **Flight Offers Search** (en vivo) y **Flight Offers Price** para confirmar antes de cualquier compra.
-
-**Para que sirve en este proyecto:** es la solucion tecnica accesible para la funcion de inspiracion. Ver seccion [[#Solucion tecnica: destino abierto + fechas flexibles + precio tope]].
+**Que era (historico):** APIs REST/JSON del GDS Amadeus para negocios sin certificacion de agencia, con cuota gratuita. Los dos endpoints clave eran `shopping.flightDestinations` (destino abierto + precio tope) y `shopping.flightDates` (fechas flexibles). Usaban datos cacheados diarios, no precio en vivo. **Todo ese acceso self-service ya no existe.**
 
 ---
 
@@ -177,9 +166,9 @@ No existe una API moderna, publica y self-serve para inventario de cruceros comp
 
 Este patron es el corazon del producto. Las opciones reales en orden de accesibilidad:
 
-**1. Amadeus Self-Service (accesible hoy):** combinar Flight Inspiration Search (`shopping.flightDestinations`) para resolver "a donde" con `maxPrice` y Flight Cheapest Date Search (`shopping.flightDates`) para resolver "cuando". Datos cacheados diariamente; no es precio en vivo. Al hacer clic el usuario va a un deep link de afiliado de Aviasales/Kiwi via Travelpayouts que confirma el precio en vivo y genera comision. **No construye checkout propio en esta etapa.**
+**1. Travelpayouts Data API (UNICA fuente accesible hoy):** `v2/prices/latest?origin=MEX` (destinos mas baratos vistos desde un origen → "a donde") y `v2/prices/month-matrix` (calendario de precios → "cuando"). Ya incluye el `marker` del afiliado en los datos, por lo que el clic monetiza directo. Datos cacheados (hasta 7 dias), no precio en vivo. Limite: 100 req/min. Al hacer clic, el usuario va a un deep link de Aviasales/Kiwi que confirma el precio en vivo. **No construye checkout propio en esta etapa.** Es el reemplazo directo del difunto Amadeus Inspiration.
 
-**2. Travelpayouts Data API (complemento):** `v2/prices/latest` y `v2/prices/month-matrix` para poblar el feed editorial y paginas SEO. Ya incluye el `marker` del afiliado en los datos, por lo que el clic monetiza directo. Limite: 100 req/min.
+**2. ~~Amadeus Self-Service~~ (DESCONTINUADO):** combinaba Flight Inspiration Search + Flight Cheapest Date Search. **Ya no accesible** (solo enterprise bajo contrato; ver seccion Amadeus arriba). No usar en la planeacion del MVP.
 
 **3. Skyscanner Browse/Indicative (upgrade futuro):** la mejor solucion del mercado para este patron, pero requiere aprobacion como partner con >100k visitas/mes.
 
@@ -188,12 +177,12 @@ Este patron es el corazon del producto. Las opciones reales en orden de accesibi
 **Lo que NO usar para este patron:** Duffel viola su look-to-book 1500:1 con cualquier arquitectura de exploracion masiva. Ver seccion Duffel arriba.
 
 **Arquitectura recomendada para el [[prototipo-drift]]:**
-1. Sourcing: Amadeus Inspiration Search o Travelpayouts Data API para poblar destinos y precios.
+1. Sourcing: **Travelpayouts Data API** (`v2/prices/latest`) para poblar destinos y precios. (Amadeus Inspiration era la alternativa, hoy descontinuada.)
 2. Scoring: calcular "deal quality score" combinando precio absoluto, rareza relativa, non-stop vs escalas y duracion posible.
 3. Enriquecimiento: vibe editorial, actividades sugeridas (Viator Affiliate API), hoteles sugeridos (Booking.com Affiliate).
 4. Salida: CTA de vuelo hacia White Label de Travelpayouts o deep link Aviasales; hotel hacia Booking.com affiliate; actividad hacia Viator.
 
-**Comunicacion de precios:** Amadeus, Aviasales y Travelpayouts son explicitos en que sus precios de inspiracion son de cache. La UX debe mostrar "precio visto hace X horas" y "verifica tarifa actual", nunca exactitud transaccional.
+**Comunicacion de precios:** Aviasales y Travelpayouts son explicitos en que sus precios de inspiracion son de cache. La UX debe mostrar "precio visto hace X horas" y "verifica tarifa actual", nunca exactitud transaccional.
 
 ---
 
@@ -201,8 +190,8 @@ Este patron es el corazon del producto. Las opciones reales en orden de accesibi
 
 | Proveedor | Umbral | Estado |
 |---|---|---|
-| Travelpayouts (links/widgets/Data API) | Sin minimo | Disponible hoy |
-| Amadeus Self-Service | Sin minimo (cuota gratuita) | Disponible hoy |
+| Travelpayouts (links/widgets/Data API) | Sin minimo | Disponible hoy — **unica fuente de inspiracion de vuelos** |
+| ~~Amadeus Self-Service~~ | — | **Descontinuado** (solo enterprise bajo contrato) |
 | Viator Affiliate API | Sin minimo | Disponible hoy |
 | Klook Affiliate | Sin minimo (~2 dias aprobacion) | Disponible hoy |
 | Booking.com Affiliate | Sin minimo (pay-per-stay) | Disponible hoy |
@@ -231,10 +220,10 @@ Umbrales de pago de Travelpayouts: PayPal $50 USD, transferencia bancaria $400 U
 - [[modelo-de-negocio]] porque las comisiones de cada proveedor determinan la economia de cada vertical.
 - [[verticales-y-economia-unitaria]] para el calculo de ingreso por venta por proveedor y la razon por la que experiencias y cruceros superan a vuelos.
 - [[arquitectura-mvp]] porque la capa de sourcing, scoring, enriquecimiento y salida depende directamente de las APIs disponibles hoy.
-- [[prototipo-drift]] porque el primer corte tecnico implementa Amadeus Inspiration + Travelpayouts como feed y Viator + Booking.com como attach.
+- [[prototipo-drift]] porque el primer corte tecnico implementa el feed sobre Travelpayouts Data API (Amadeus Inspiration quedo descontinuado) y Viator + Booking.com como attach.
 - [[acreditacion-y-host-agencies]] para entender cuando y como cruzar de afiliado a agencia con IATA/CLIA/TIDS.
 - [[legal-y-fiscal-mexico]] para las implicaciones del RFC, SAT, RNT y PROFECO segun el modelo que se adopte.
-- [[riesgos-y-preguntas-abiertas]] porque la cobertura incompleta de Amadeus y el cierre de Hotellook son riesgos de inventario activos.
+- [[riesgos-y-preguntas-abiertas]] porque la dependencia de una sola fuente (Travelpayouts, tras la baja de Amadeus Self-Service) y el cierre de Hotellook son riesgos de inventario activos.
 - [[roadmap]] para el orden de activacion de cada proveedor por fase.
 
 ---

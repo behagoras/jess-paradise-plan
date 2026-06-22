@@ -27,7 +27,7 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
 
   const close = () => go("detail");
 
-  // No real offer to hand off (empty/errored search) — bounce to results,
+  // No real offer to hand off (empty/errored search) - bounce to results,
   // which renders the honest widen hint. Render nothing rather than a fake.
   useEffect(() => {
     if (!offer) go("results");
@@ -48,7 +48,7 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
       perPerson: Math.round(perPerson),
       when: state.when,
       departure: state.departure,
-      activityOn: false, // no live activity source yet — never persist a fake one
+      activityOn: false, // no live activity source yet - never persist a fake one
     };
     try {
       // Browsing history (NOT a booking): record what the visitor handed off
@@ -59,7 +59,7 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
     } catch {
       // Soft-fail: the hand-off proceeds regardless of the history write.
     } finally {
-      // Affiliate-only model: we never take payment — we deep-link out to the
+      // Affiliate-only model: we never take payment - we deep-link out to the
       // provider so the user books there, with our marker for attribution. The
       // marker is the public Travelpayouts account id (safe to ship via
       // NEXT_PUBLIC); the API token for live data stays server-side in Convex.
@@ -125,6 +125,20 @@ export function HandoffSheet({ planner }: { planner: PlannerApi }) {
         >
           {saving ? "Saving…" : `Continue to ${provider} →`}
         </Button>
+
+        {/* Secondary hand-off: the REAL Viator deep link for the activity, only
+            when a real product (with a real productUrl) was found. We link out;
+            booking is confirmed on Viator's site. Never shown if absent. */}
+        {offer.activity?.productUrl && (
+          <a
+            href={offer.activity.productUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-[11px] block w-full rounded-2xl border border-line bg-card px-4 py-[14px] text-[14.5px] font-bold text-ink no-underline"
+          >
+            Book the experience on Viator →
+          </a>
+        )}
 
         <button
           onClick={close}

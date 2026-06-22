@@ -36,7 +36,7 @@ La investigacion produjo un reencuadre importante. El producto no debe lanzarse 
 
 > **Motor editorializado de oportunidades aspiracionales para viajeros flexibles**, con monetizacion afiliada simple y una capa de curaduria fuerte.
 
-Este reencuadre no es estetico: viene de una restriccion tecnica concreta. Las APIs de busqueda en tiempo real con afiliacion full-funnel (Aviasales Search API, Kiwi API dentro de Travelpayouts) exigen proyectos con al menos 50,000 MAU. Sin esa escala, la entrada correcta es un modelo de discovery con datos cacheados (Amadeus Inspiration Search, Aviasales Data API) y salidas de afiliacion white-label. Primero se construye habito y trafico; luego se negocia acceso a herramientas mas potentes.
+Este reencuadre no es estetico: viene de una restriccion tecnica concreta. Las APIs de busqueda en tiempo real con afiliacion full-funnel (Aviasales Search API, Kiwi API dentro de Travelpayouts) exigen proyectos con al menos 50,000 MAU. Sin esa escala, la entrada correcta es un modelo de discovery con datos cacheados (Aviasales / Travelpayouts Data API — Amadeus Inspiration Search era la otra opcion, hoy descontinuada) y salidas de afiliacion white-label. Primero se construye habito y trafico; luego se negocia acceso a herramientas mas potentes.
 
 El [[modelo-de-negocio]] sigue esa logica: fase afiliado primero, reservas propias despues.
 

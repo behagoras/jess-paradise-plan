@@ -11,7 +11,19 @@
 
 import { PROVIDER } from "./data";
 
-export const fmt = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+/**
+ * Format an amount as Mexican pesos. The whole app prices in MXN (every
+ * provider is asked for MXN natively and non-MXN prices are converted with a
+ * real cached rate in convex/fx.ts), so money renders es-MX / MXN. Whole pesos
+ * only (no centavos): our amounts are already rounded to whole pesos.
+ */
+const MXN_FMT = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 0,
+});
+
+export const fmt = (n: number) => MXN_FMT.format(Math.round(n));
 
 /** A single real, included, priced line item (flight / hotel / activity). */
 export interface PriceLine {

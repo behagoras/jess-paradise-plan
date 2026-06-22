@@ -8,8 +8,12 @@
  * @module
  */
 
+import type * as destIndex from "../destIndex.js";
+import type * as fx from "../fx.js";
+import type * as liteapi from "../liteapi.js";
 import type * as travelpayouts from "../travelpayouts.js";
 import type * as trips from "../trips.js";
+import type * as viator from "../viator.js";
 
 import type {
   ApiFromModules,
@@ -18,8 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  destIndex: typeof destIndex;
+  fx: typeof fx;
+  liteapi: typeof liteapi;
   travelpayouts: typeof travelpayouts;
   trips: typeof trips;
+  viator: typeof viator;
 }>;
 
 /**

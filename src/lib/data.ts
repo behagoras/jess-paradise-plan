@@ -101,7 +101,7 @@ export const DESTS: Destination[] = [
     blurb: "Bohemian beaches, secret cenotes, and slow luxury under the palms.",
     gradient: "linear-gradient(140deg,#0E9E8E,#5BC98A 55%,#E9D27E)",
     from: "CDMX",
-    to: "CUN",
+    to: "TQO",
     slotHint: "Drop a Tulum photo",
   },
   {
@@ -188,16 +188,6 @@ export const DESTS: Destination[] = [
   },
 ];
 
-/** Per-destination base price (USD), keyed by destination `key`. */
-export const DEST_BASE: Record<string, number> = {
-  cancun: 540,
-  tulum: 720,
-  oaxaca: 380,
-  lisbon: 880,
-  cruise: 690,
-  patagonia: 1340,
-};
-
 export const HOW_IT_WORKS = [
   {
     n: "1",
@@ -212,13 +202,13 @@ export const HOW_IT_WORKS = [
   {
     n: "3",
     title: "Get a surprise package",
-    body: "Real flights and dates matched to your vibe — confirm the price on the provider's site.",
+    body: "Real flights and dates matched to your vibe - confirm the price on the provider's site.",
   },
 ];
 
 /**
  * Where the hand-off actually sends the user to book. The flight (the hook of
- * every trip) deep-links to Aviasales — a Travelpayouts brand — so the named
+ * every trip) deep-links to Aviasales - a Travelpayouts brand - so the named
  * provider must be Aviasales, not a merchant we don't integrate with. (Hotel
  * search uses Hotellook, also Travelpayouts; the flight link is always primary.)
  */

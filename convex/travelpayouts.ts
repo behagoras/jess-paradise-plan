@@ -1,9 +1,10 @@
 import { action, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { toMxn } from "./fx";
 
 /**
- * Travelpayouts data layer — real flight + hotel + cheapest-destination data.
+ * Travelpayouts data layer - real flight + hotel + cheapest-destination data.
  *
  * These are the token-only Data APIs (no program approval needed): they return
  * the cheapest *cached* fares/hotel prices Travelpayouts has seen, NOT a live
@@ -12,7 +13,7 @@ import { v } from "convex/values";
  * site after the hand-off.
  *
  * NON-NEGOTIABLE RULE (carried through the whole "real data" sweep): if the API
- * does not return a field, we never fabricate it — we return null / omit it and
+ * does not return a field, we never fabricate it - we return null / omit it and
  * let the UI hide whatever is missing. Date and destination are BOTH optional;
  * with no destination we use origin-only "cheapest" mode (powers surprise trips).
  *
@@ -66,7 +67,7 @@ export interface FlightOffer {
   departureAt: string; // ISO8601 with offset, e.g. "2026-07-03T06:37:00-05:00"
   returnAt: string | null; // round trips only; null for one-way
   transfers: number;
-  link: string; // path on aviasales.com — prefix with https://www.aviasales.com
+  link: string; // path on aviasales.com - prefix with https://www.aviasales.com
 }
 
 export interface HotelOffer {
@@ -227,7 +228,7 @@ async function getCityInfo(ctx: {
         const out: CityDictRow[] = [];
         for (const r of raw) {
           if (!r.code || !ASCII_CODE.test(r.code)) continue;
-          // Only keep cities with flights — the only destinations we resolve.
+          // Only keep cities with flights - the only destinations we resolve.
           // This also keeps the cached array under Convex's 8192-element cap.
           if (r.has_flightable_airport === false) continue;
           out.push({
@@ -303,6 +304,24 @@ function toFlightOffer(
   };
 }
 
+/**
+ * Ensure a FlightOffer is priced in MXN. We request MXN natively, but if TP
+ * returned a non-MXN price we CONVERT it with a real cached rate (never omit a
+ * mismatched price). If the FX rate is unavailable we keep the original amount
+ * + currency, labelled honestly - we never fabricate a rate.
+ */
+async function flightToMxn(
+  ctx: { runQuery: any; runMutation: any },
+  offer: FlightOffer
+): Promise<FlightOffer> {
+  if ((offer.currency || "").toUpperCase() === "MXN") {
+    return { ...offer, currency: "MXN" };
+  }
+  const converted = await toMxn(ctx, offer.price, offer.currency);
+  if (converted == null) return offer; // keep original, honest currency label
+  return { ...offer, price: converted, currency: "MXN" };
+}
+
 async function fetchFlightRows(
   params: URLSearchParams
 ): Promise<RawFlightRow[]> {
@@ -325,7 +344,7 @@ async function fetchFlightRows(
  * optional: with no destination we omit it so the API returns the single
  * cheapest reachable route from `origin` (origin-only mode). By default we
  * request a round trip (`one_way:false`) and capture both `departure_at` and
- * `return_at`, because the app shows N-night trips — real return dates matter.
+ * `return_at`, because the app shows N-night trips - real return dates matter.
  * Set `oneWay:true` for a one-way fare. Returns null if TP has nothing.
  */
 export const searchCheapestFlight = action({
@@ -335,11 +354,11 @@ export const searchCheapestFlight = action({
     // YYYY-MM or YYYY-MM-DD; omit to let TP pick the cheapest upcoming date.
     departureAt: v.optional(v.string()),
     oneWay: v.optional(v.boolean()), // default false (round trip)
-    currency: v.optional(v.string()), // default "usd"
+    currency: v.optional(v.string()), // default "mxn"
   },
   handler: async (ctx, { origin, destination, departureAt, oneWay, currency }) => {
     const token = getToken();
-    const cur = currency ?? "usd";
+    const cur = currency ?? "mxn";
     const rt = oneWay ? false : true; // round trip by default
     const key = `flight:${origin}:${destination ?? "ANY"}:${
       departureAt ?? "ANY"
@@ -372,7 +391,7 @@ export const searchCheapestFlight = action({
           getAirlineNames(ctx),
           getCityInfo(ctx),
         ]);
-        return toFlightOffer(top, cur, airlineNames, cityInfo);
+        return flightToMxn(ctx, toFlightOffer(top, cur, airlineNames, cityInfo));
       }
     );
   },
@@ -382,20 +401,24 @@ export const searchCheapestFlight = action({
  * The engine for "destination not required": cheapest REAL destinations from an
  * origin. `unique:true` collapses to one fare per destination; `sorting:price`
  * orders cheapest-first. Returns an array (possibly empty) of round-trip
- * FlightOffers — destination IATA, price, airline, departure_at, return_at,
- * transfers, link — each enriched with the resolved airline name when known.
+ * FlightOffers - destination IATA, price, airline, departure_at, return_at,
+ * transfers, link - each enriched with the resolved airline name when known.
  */
 export const searchCheapestDestinations = action({
   args: {
     origin: v.string(), // IATA
     limit: v.optional(v.number()), // default 6
-    currency: v.optional(v.string()), // default "usd"
+    // YYYY-MM (or YYYY-MM-DD); omit to let TP pick the cheapest upcoming month.
+    // When set, the feed is constrained to that departure month (the wizard's
+    // "When" chip). Part of the cache key so months don't collide.
+    departureAt: v.optional(v.string()),
+    currency: v.optional(v.string()), // default "mxn"
   },
-  handler: async (ctx, { origin, limit, currency }) => {
+  handler: async (ctx, { origin, limit, departureAt, currency }) => {
     const token = getToken();
-    const cur = currency ?? "usd";
+    const cur = currency ?? "mxn";
     const n = Math.max(1, Math.min(limit ?? 6, 30));
-    const key = `dests:${origin}:${n}:${cur}`;
+    const key = `dests:${origin}:${n}:${departureAt ?? "ANY"}:${cur}`;
 
     return withCache<FlightOffer[]>(
       ctx,
@@ -414,6 +437,7 @@ export const searchCheapestDestinations = action({
           market: "us",
           token,
         });
+        if (departureAt) params.set("departure_at", departureAt);
 
         const rows = await fetchFlightRows(params);
         if (rows.length === 0) return [];
@@ -422,7 +446,10 @@ export const searchCheapestDestinations = action({
           getAirlineNames(ctx),
           getCityInfo(ctx),
         ]);
-        return rows.map((r) => toFlightOffer(r, cur, airlineNames, cityInfo));
+        const mapped = rows.map((r) =>
+          toFlightOffer(r, cur, airlineNames, cityInfo)
+        );
+        return Promise.all(mapped.map((o) => flightToMxn(ctx, o)));
       }
     );
   },
@@ -470,7 +497,7 @@ async function lookupLocationId(
  * Cheapest real hotel for a destination over a date range, from Hotellook's
  * cache.json. Accepts either `destinationIata` (e.g. "CUN") or a human
  * `location` (e.g. "Cancun"); we resolve a locationId when given a name.
- * Returns a real { hotelName, priceFrom, stars, currency } or null — NEVER an
+ * Returns a real { hotelName, priceFrom, stars, currency } or null - NEVER an
  * invented hotel. Missing price/stars come back as null on the row.
  */
 export const searchHotel = action({

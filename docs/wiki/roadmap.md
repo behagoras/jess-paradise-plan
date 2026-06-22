@@ -14,13 +14,13 @@ El primer corte arranca con vuelos porque es la vertical donde los datos son má
 
 **Orden de alta de proveedores en esta fase:**
 
-1. **Amadeus Flight Inspiration Search API** como fuente principal de discovery. Permite filtrar por precio, duración de viaje, non-stop y ventana de fechas. Ofrece cuota gratuita desde el primer día. Su limitación más importante es que no cubre low-cost carriers, American Airlines, Delta ni British Airways.
-2. **Aviasales Data API / Travelpayouts** como fuente complementaria de precios cacheados. Los datos se almacenan hasta 7 días y son adecuados para un feed editorial y páginas SEO estáticas. El Search API en tiempo real de Aviasales requiere 50,000 MAU, por lo que en esta fase solo se usa la capa de datos de caché.
+1. **Travelpayouts / Aviasales Data API** como **fuente principal y única** de discovery. `v2/prices/latest?origin=MEX` (destinos más baratos desde un origen) + `v2/prices/month-matrix` (calendario). Datos cacheados hasta 7 días, adecuados para feed editorial y páginas SEO. El Search API en tiempo real de Aviasales requiere 50,000 MAU, así que en esta fase solo se usa la capa de datos de caché. Una sola alta gratuita.
+2. ⚠️ **~~Amadeus Flight Inspiration Search~~ — DESCONTINUADO (2026-06-21):** era la fuente principal planeada, pero Amadeus retiró su API pública Self-Service (hoy solo enterprise bajo contrato). **Queda fuera del MVP.** El discovery se construye solo sobre Travelpayouts.
 3. **Travelpayouts White Label Web** como salida de afiliación para el usuario que quiere cerrar la búsqueda. Es la opción de menor fricción para monetizar click-outs de vuelo sin cumplir el umbral de MAU.
 
 **Objetivo de validación:** comprobar que el viajero flexible "muerde el anzuelo" de un feed estilo "no sé adónde, muéstrame lo mejor barato". El criterio de éxito interno es que el propio fundador use el producto para planear un viaje real.
 
-**Nota de honestidad sobre precios:** tanto Amadeus como Aviasales son explícitos en que sus capas de inspiración son datos de caché. La UX debe comunicarlo con textos del tipo "precio visto hace X horas" en lugar de fingir exactitud transaccional.
+**Nota de honestidad sobre precios:** Aviasales/Travelpayouts es explícito en que su capa de inspiración son datos de caché. La UX debe comunicarlo con textos del tipo "precio visto hace X horas" en lugar de fingir exactitud transaccional.
 
 ---
 

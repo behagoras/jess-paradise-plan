@@ -16,19 +16,22 @@ Este documento consolida los riesgos identificados y las preguntas sin respuesta
 
 ---
 
-## 2. Cobertura de vuelos: la brecha de Amadeus
+## 2. Fuente única de vuelos: Amadeus descontinuado, todo depende de Travelpayouts
 
-**Hallazgo de investigación.** [[proveedores-apis-e-inventario]] detalla esto a fondo, pero el riesgo merece mención aquí: Amadeus Self-Service, la única API de vuelos accesible sin umbral de tráfico, excluye explícitamente aerolíneas low-cost, American Airlines, Delta y British Airways de su catálogo de tarifas públicas. Para un producto centrado en deals oportunistas, esa omisión puede ser significativa, porque muchos de los mejores deals de flexibilidad viven precisamente en aerolíneas low-cost.
+> ⚠️ **Actualización 2026-06-21 (riesgo elevado).** Amadeus **retiró su API pública Self-Service**; hoy solo ofrece enterprise bajo contrato. Esto **elimina** la que era la fuente de discovery accesible y deja a **Travelpayouts como única fuente de inspiración de vuelos** del proyecto. El riesgo ya no es "la brecha de cobertura de Amadeus", sino la **dependencia de un solo proveedor**.
 
-La alternativa con mejor cobertura (Travelpayouts Search API vía Aviasales/Kiwi) exige 50,000 MAU confirmados para acceso real-time afiliado. Skyscanner, que tiene la mejor experiencia de "cualquier destino, cualquier fecha" sobre datos cacheados, exige más de 100,000 visitas al mes y rechaza explícitamente a startups sin producto desarrollado.
+**Implicaciones del cambio:**
 
-**Pregunta abierta:** ¿La cobertura de Amadeus más el Data API cacheado de Travelpayouts produce un feed suficientemente rico para que el usuario sienta que está viendo "las mejores opciones", o la ausencia de low-cost rompe la promesa de valor?
+- **Single point of failure:** si Travelpayouts cambia términos, sube el umbral de su Data API o corta acceso, el feed de discovery se queda sin fuente. No hay segunda fuente accesible hoy (Skyscanner exige >100k visitas/mes; el Search API real-time de Aviasales/Kiwi exige 50,000 MAU).
+- **Cobertura:** la promesa "muéstrame lo mejor barato" queda atada a lo que Travelpayouts haya visto cacheado desde el origen. Hay que validar que ese feed se sienta suficientemente rico.
+
+**Preguntas abiertas:** (1) ¿El Data API cacheado de Travelpayouts solo produce un feed con el que el usuario sienta que ve "las mejores opciones"? (2) ¿Qué plan B de fuente existe si Travelpayouts falla — vale la pena evaluar Duffel para datos (ojo look-to-book 1500:1), Kiwi al alcanzar MAU, o negociar Amadeus enterprise más adelante?
 
 ---
 
 ## 3. Frescura del precio y gestión de expectativas
 
-**Hallazgo de investigación.** Tanto Amadeus Inspiration Search como el Data API de Travelpayouts devuelven precios de caché, no en vivo. Amadeus actualiza sus datos cacheados diariamente a partir de búsquedas y reservas pasadas. Travelpayouts recomienda sus endpoints incluso para generar páginas estáticas. CruiseSheet, competidor en cruceros, reconoce públicamente que los precios cambian rápido y que el checkout final puede diferir.
+**Hallazgo de investigación.** El Data API de Travelpayouts devuelve precios de caché, no en vivo, y la propia plataforma recomienda sus endpoints incluso para generar páginas estáticas. CruiseSheet, competidor en cruceros, reconoce públicamente que los precios cambian rápido y que el checkout final puede diferir.
 
 Esto no es un defecto menor: el contrato de confianza con el usuario depende de que el precio que ve sea al menos aproximado al precio que encontrará al hacer clic. Si la diferencia es consistentemente grande, se rompe la credibilidad y aparece exposición ante PROFECO.
 
@@ -85,7 +88,7 @@ El argumento del fundador es que el foso real es la combinación de tres cosas q
 
 **Hallazgo de investigación combinado con hipótesis del fundador.** La economía unitaria de vuelos como afiliado es pobre (~1.1-1.5% sobre tickets medios), lo que significa que el ingreso real está en cruceros y paquetes (3-16% sobre US$1,200-3,000+) y en experiencias (Viator/GetYourGuide 8%, Klook 5-6.5%).
 
-La paradoja es que vuelos son la vertical más fácil de integrar técnicamente (Amadeus Self-Service, Travelpayouts Data API), mientras que cruceros y paquetes, donde está el margen real, son los más difíciles (requieren acreditación, host agency o estructura de agencia).
+La paradoja es que vuelos son la vertical más fácil de integrar técnicamente (Travelpayouts Data API; antes también Amadeus Self-Service, hoy descontinuado), mientras que cruceros y paquetes, donde está el margen real, son los más difíciles (requieren acreditación, host agency o estructura de agencia).
 
 **Pregunta abierta:** ¿Conviene priorizar cruceros y experiencias desde el inicio aunque sean más difíciles de integrar, o usar vuelos como gancho de tráfico SEO y monetizar de verdad solo cuando llegue el volumen? La investigación sugiere lo segundo: vuelos como inspiración y SEO, monetización real en experiencias y cruceros.
 
@@ -106,7 +109,8 @@ La investigación de McKinsey corrobora que el 80% del mercado de ocio de lujo e
 | Riesgo | Tipo | Estado |
 |---|---|---|
 | Inventario bueno es confidencial | Hallazgo | Confirmado, no hay solución técnica directa |
-| Amadeus no cubre LCC/AA/Delta/BA | Hallazgo | Confirmado, limitación documentada |
+| Amadeus Self-Service descontinuado (solo enterprise) | Hallazgo | Confirmado 2026-06-21 — fuente de discovery eliminada |
+| Dependencia de fuente única (solo Travelpayouts) | Riesgo elevado | Activo — sin segunda fuente accesible hoy |
 | Travelpayouts Search API exige 50k MAU | Hallazgo | Confirmado, limitación documentada |
 | Hotellook cerrado desde oct 2025 | Hallazgo | Confirmado |
 | Frescura del precio | Hallazgo | Confirmado, requiere decisión de UX |

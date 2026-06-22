@@ -94,7 +94,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "docs/la-idea-de-negocio.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +103,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for la-idea-de-negocio"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +112,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "docs/la-idea-de-negocio.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from la-idea-de-negocio"
+              "title": "Outgoing links"
             }
           },
           {
@@ -156,13 +154,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "docs/la-idea-de-negocio.md",
+                "file": "handoff-build/paradise-plan-handoff/PROMPT.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of la-idea-de-negocio"
+              "title": "Outline of PROMPT"
             }
           }
         ]
@@ -183,52 +181,53 @@
       "bases:Create new base": false
     }
   },
-  "active": "aed9ba719ae33fa6",
+  "active": "2885a2ef855333c8",
   "lastOpenFiles": [
-    "docs/flujo-app-ui.md",
-    "graphify-out/cache/ast/53ccc84568bdc690ed31724e4db8e06723b53415a0f5db5febc8f9bf4e7b2f51.json",
-    "graphify-out/cache/semantic/afeed555eb935a6d131c3b7a28a0c068f19c09a7e9bccc271abec3b4c3d0f7ca.json",
-    "graphify-out/cache/semantic/f22b5691e4e2d3a1c1dd5f49019cf426899a511c5575531e87d6b60e3eb72a82.json",
-    "graphify-out/cache/semantic/2215fb612b3608b67d29e0e4a362acda5f6c8ded944d5e5133e8075b41cc97a9.json",
-    "graphify-out/cache/semantic/1070f4829822a531d0b05ebf634e4d593e609f401a11fb6f35d3fb44c721aff4.json",
-    "graphify-out/cache/semantic/56c1e0cd70c4728ddbe2e3480ad0b1831d7161ddcb582bf1c88a627f801b80df.json",
-    "graphify-out/cache/semantic/c73eb7c252961a6eabebb22dd18e44dc2190779e447df353923ecdc889867357.json",
-    "graphify-out/cache/semantic/943c74f79bc3ea15866a27145d1cdb254b786986926873fdc69bff0c63c6ffcf.json",
-    "graphify-out/cache/semantic/c8c5a4cf68ad4a14b1ed3ede9a3ce904ed1f9d7a6e1fe430b967550a219caa65.json",
-    "graphify-out/cache/semantic/5fc5012daf78c70b72282eae95e8cb284ce41e31b72d9c5138fa9bdefbbeeb70.json",
-    "graphify-out/GRAPH_REPORT.md",
-    "project-base/proyecto-original-2019.md",
-    "docs/index.md",
-    "docs/la-idea-de-negocio.md",
-    "docs/wiki/proveedores-apis-e-inventario.md",
-    "docs/wiki/prototipo-drift.md",
-    "docs/wiki/panorama-competitivo.md",
-    "docs/wiki/modelo-de-negocio.md",
-    "docs/wiki/legal-y-fiscal-mexico.md",
-    "docs/wiki/glosario.md",
-    "docs/wiki/arquitectura-mvp.md",
-    "docs/wiki/acreditacion-y-host-agencies.md",
-    "project-base/Presentation.md",
-    "Presentation.md",
-    "project-base/what-can-make-traveling-easier.jpg",
-    "project-base/Image 6-20-26 at 1.10 PM.jpg",
-    "project-base/how-trips-are-planed.jpg",
-    "project-base/Features.jpg",
-    "project-base/Concept map. PLanning with paradise.jpg",
-    "project-base/PP/Web 1920 – 9.png",
-    "project-base/PP/Web 1920 – 8.png",
-    "project-base/PP/Web 1920 – 7.png",
-    "project-base/PP/Web 1920 – 6.png",
-    "project-base/PP/Web 1920 – 5.png",
-    "docs/wiki/riesgos-y-preguntas-abiertas.md",
-    "docs/wiki/verticales-y-economia-unitaria.md",
-    "docs/wiki/tesis-y-vision.md",
-    "docs/wiki/roadmap.md",
-    "docs/wiki/usuario-objetivo.md",
-    "docs/sources/2026-06-prompt-interfaz-drift.md",
-    "docs/sources/2026-06-prd-descubrimiento-viajes.md",
-    "docs/sources/2026-06-investigacion-tesis-negocio.md",
-    "docs/sources/2026-06-investigacion-competir-con-ota.md",
-    "docs/sources/2026-06-investigacion-apis-vuelos-experiencias.md"
+    "convex/fx.ts",
+    "graphify-out/cache/ast/b4974932c34b66c0e04aa5cb8f3a6c7fccea422449cc4c9d23dea6c730eb7ac9.json",
+    "graphify-out/cache/ast/90b9252bb7da705a9225e36363c978903e413b2dfce8d25f064a1447a363dc9f.json",
+    "convex/_cacheCleanup.ts",
+    "convex/_viatorDebug.ts",
+    "convex/viator.ts",
+    "convex/liteapi.ts",
+    "convex/destIndex.ts",
+    "src/lib/scoring.ts.tmp.472.f7965877b11c",
+    "docs/wiki/research-busqueda-inversa/Apis para descubrimiento inverso chatgpt.md",
+    "docs/wiki/research-busqueda-inversa/Apis viajes dev individual claude.md",
+    "docs/wiki/research-busqueda-inversa/claude.md",
+    "docs/wiki/research-busqueda-inversa",
+    "graphify-out/cache/semantic/f7265aab1c136e53b6d8dc2c46293fe60197c9fea7d095c442f6245c18ee8656.json",
+    "prod-09-variation2-monterrey-aug.png",
+    "prod-08-handoff.png",
+    "prod-07-detail-fixed.png",
+    "prod-06-results-fixed.png",
+    "prod-05-results.png",
+    "prod-04-generating.png",
+    "prod-03-wizard-step2.png",
+    "prod-02-wizard-step1.png",
+    "prod-01-landing.png",
+    "CLAUDE.md",
+    "graphify-out/2026-06-21/GRAPH_REPORT.md",
+    "docs/contexto-grafo-vs-nota-canonica.md",
+    "docs/sources/2026-06-nota-voz-calle-malaga.md",
+    "test-results/handoff-deeplink.verify-ha-dff18-s-deep-link-with-our-marker-chromium/error-context.md",
+    "test-results/handoff-deeplink.verify-ha-dff18-s-deep-link-with-our-marker-chromium/test-failed-1.png",
+    "BUILT-APP.md",
+    "test-results/paradise-plan-Paradise-Pla-8fc0c--stepper-update-the-summary-chromium/error-context.md",
+    "test-results/paradise-plan-Paradise-Pla-96f44--reaches-the-hand-off-sheet-chromium/error-context.md",
+    "node_modules/@floating-ui/utils/README.md",
+    "node_modules/@floating-ui/react-dom/README.md",
+    "node_modules/@floating-ui/dom/README.md",
+    "node_modules/@floating-ui/core/README.md",
+    "node_modules/@radix-ui/rect/README.md",
+    "node_modules/@radix-ui/react-visually-hidden/README.md",
+    "node_modules/@radix-ui/react-use-size/README.md",
+    "node_modules/@radix-ui/react-use-rect/README.md",
+    "node_modules/@radix-ui/react-use-previous/README.md",
+    "node_modules/@radix-ui/react-use-layout-effect/README.md",
+    "node_modules/@radix-ui/react-use-is-hydrated/README.md",
+    "node_modules/@radix-ui/react-use-escape-keydown/README.md",
+    "node_modules/@radix-ui/react-use-effect-event/README.md",
+    "node_modules/@radix-ui/react-use-controllable-state/README.md"
   ]
 }
