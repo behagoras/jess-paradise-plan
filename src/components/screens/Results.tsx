@@ -72,9 +72,15 @@ export function Results({ planner }: { planner: PlannerApi }) {
             includeHotel
           );
           const win = windowFromFlight(o.flight, dest.nights || 3);
-          const dateWindow = `${monthLabel(o.flight.departureAt)}${
-            o.flight.returnAt ? ` – ${monthLabel(o.flight.returnAt)}` : ""
-          }`;
+          // Show the real nights + return only when the fare genuinely spans an
+          // overnight stay; otherwise show just the real outbound date so we
+          // never print "3 nights · Jul 3 – Jul 3" for a same-day round trip.
+          const tripMeta =
+            win.nights && win.nights > 0
+              ? `${win.nights} ${win.nights === 1 ? "night" : "nights"} · ${monthLabel(
+                  o.flight.departureAt
+                )} – ${monthLabel(o.flight.returnAt!)}`
+              : monthLabel(o.flight.departureAt);
           return (
             <Card
               key={dest.key}
@@ -127,7 +133,7 @@ export function Results({ planner }: { planner: PlannerApi }) {
                 <div className="flex items-center justify-between pt-[13px]">
                   <div>
                     <div className="text-[11px] font-bold text-ink-soft">
-                      {win.nights} nights · {dateWindow}
+                      {tripMeta}
                     </div>
                     <div className="flex items-baseline gap-[7px]">
                       <span className="font-display text-[21px] font-extrabold text-ink">

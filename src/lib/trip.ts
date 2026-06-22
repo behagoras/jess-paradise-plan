@@ -97,13 +97,26 @@ function addDays(date: string, n: number): string {
 export interface StayWindow {
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD
-  nights: number;
+  /**
+   * REAL nights between the outbound and the actual return leg. Null when the
+   * itinerary does not support a real overnight count — i.e. a same-day round
+   * trip (return on the outbound day) or a one-way fare with no return leg.
+   * The UI must NOT display an invented nights number when this is null.
+   */
+  nights: number | null;
 }
 
 /**
- * Derive the hotel stay window from a REAL flight offer. Uses the real outbound
- * date as check-in and the real return date as check-out; when the flight has
- * no return leg, falls back to `fallbackNights` after check-in.
+ * Derive the hotel stay window from a REAL flight offer. `checkIn` is the real
+ * outbound date; `checkOut` is the real return date when the itinerary has one
+ * that is at least one night later, else `fallbackNights` after check-in so the
+ * hotel search still has a valid range to query.
+ *
+ * `nights` reports the TRUTH, never the fallback: it is the real overnight count
+ * derived from the actual outbound→return dates, or null when the fare cannot
+ * support a real count (same-day round trip, or one-way with no return). This
+ * keeps the screens from ever printing a nights number the itinerary doesn't
+ * back up (the old behaviour showed e.g. "3 nights · Jul 3 – Jul 3").
  */
 export function windowFromFlight(
   flight: { departureAt: string; returnAt: string | null },
@@ -113,10 +126,15 @@ export function windowFromFlight(
   if (flight.returnAt) {
     const checkOut = isoDate(flight.returnAt);
     const nights = nightsBetween(checkIn, checkOut);
+    // A real return at least one night out: report the real nights.
     if (nights > 0) return { checkIn, checkOut, nights };
+    // Same-day round trip: real return exists but is 0 nights. Use a fallback
+    // checkout so a hotel query still has a range, but report nights as null
+    // so the UI never claims an overnight count the fare doesn't support.
+    return { checkIn, checkOut: addDays(checkIn, fallbackNights), nights: null };
   }
-  const checkOut = addDays(checkIn, fallbackNights);
-  return { checkIn, checkOut, nights: fallbackNights };
+  // One-way / no return leg: no real overnight count to show.
+  return { checkIn, checkOut: addDays(checkIn, fallbackNights), nights: null };
 }
 
 /** "2026-07-03T14:59:00-05:00" → "Jul 3" (timezone-safe). */
