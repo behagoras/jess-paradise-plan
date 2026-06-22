@@ -40,5 +40,5 @@ Why this matters: the app's promise is "tell me my budget + origin + vibe and su
 </verification>
 
 <success_criteria>
-"Surprise me" returns up to 30 real, deduped destinations whose order varies run-to-run, led by genuine vibe-matched curated dests, with zero fabricated data and a labeled, honest cost model.
+"Surprise me" returns up to 30 real, deduped destinations whose order varies run-to-run, led by genuine vibe-matched curated dests, with zero fabricated data and a labeled, honest cost model. A filtered search must ALWAYS return responses; persistent empties under normal filters mean the architecture must change (broader candidate source, more inventory, softer filtering) to keep the promise, never an accepted empty state.
 </success_criteria>
