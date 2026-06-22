@@ -82,7 +82,7 @@ const INITIAL: PlannerState = {
 
 /**
  * One real, fetched trip offer. `dest` is the catalog card it anchors (image,
- * blurb, rating, region copy); `flight`/`hotel` are the REAL fares the data
+ * blurb, region copy); `flight`/`hotel` are the REAL fares the data
  * layer returned (hotel may be null when Hotellook has nothing / is down).
  * `catalog` is false for extra destinations surfaced via cheapest-anywhere,
  * which have no curated card and render only the fields the API returned.
@@ -378,7 +378,7 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
 /**
  * Build a minimal catalog-shaped card for a cheapest-anywhere destination that
  * has no curated entry. Only the fields the API actually returned get real
- * values; the rest are neutral placeholders for layout (no fake price/rating).
+ * values; the rest are neutral placeholders for layout (no fake price/scarcity).
  */
 function syntheticDest(f: FlightOffer): Destination {
   const name = f.destinationCity ?? f.destination;
@@ -392,7 +392,6 @@ function syntheticDest(f: FlightOffer): Destination {
     tags: [],
     weather: "",
     intensity: 0,
-    rating: "",
     airline: f.airlineName ?? f.airline,
     hotel: "",
     room: "",
@@ -402,8 +401,6 @@ function syntheticDest(f: FlightOffer): Destination {
     gradient: "linear-gradient(140deg,#22B5C9,#3FD0C2 48%,#F0C04A)",
     from: f.origin,
     to: f.destination,
-    departsIn: 0,
-    seats: 0,
     slotHint: `Drop a ${name} photo`,
   };
 }

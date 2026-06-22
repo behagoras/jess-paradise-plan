@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // resolves, so the bar reflects work that actually happened.
 const STATUS = [
   "Searching live flight fares…",
-  "Pricing the best stays…",
+  "Pricing real stays…",
   "Assembling your trips…",
 ];
 const PCT = [34, 72, 96];

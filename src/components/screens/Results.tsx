@@ -4,7 +4,6 @@ import { fmt, type PlannerApi, type RealOffer } from "@/lib/usePlanner";
 import { windowFromFlight, monthLabel } from "@/lib/trip";
 import { ImageSlot } from "../ImageSlot";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -66,7 +65,6 @@ export function Results({ planner }: { planner: PlannerApi }) {
       <div className="grid gap-4 pt-2 lg:grid-cols-2 xl:grid-cols-3">
         {offers.map((o, i) => {
           const dest = o.dest;
-          const best = i === 0;
           const perPerson = cardPerPerson(
             o,
             state.travelers,
@@ -94,13 +92,6 @@ export function Results({ planner }: { planner: PlannerApi }) {
                       "linear-gradient(to top,rgba(20,12,6,.62),rgba(20,12,6,0) 55%)",
                   }}
                 />
-                {best && (
-                  <div className="pointer-events-none absolute left-[13px] top-[13px] flex gap-[7px]">
-                    <Badge className="rounded-full bg-primary px-[11px] py-1.5 text-[11.5px] font-extrabold text-primary-foreground">
-                      Best match
-                    </Badge>
-                  </div>
-                )}
                 <div className="pointer-events-none absolute inset-x-[15px] bottom-[13px] flex items-end justify-between">
                   <div>
                     <div className="font-display text-[23px] font-extrabold text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]">
@@ -112,12 +103,6 @@ export function Results({ planner }: { planner: PlannerApi }) {
                       </div>
                     )}
                   </div>
-                  {dest.rating && (
-                    <div className="flex items-center gap-1 rounded-full bg-white/90 px-[9px] py-[5px] text-xs font-extrabold text-ink">
-                      <span className="text-star">★</span>
-                      {dest.rating}
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="flex flex-1 flex-col px-[17px] pb-[17px] pt-[15px]">
