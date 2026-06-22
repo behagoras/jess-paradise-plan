@@ -16,11 +16,14 @@ La interfaz principal no es una caja de búsqueda vacía, sino un **feed vivo**.
 
 ## Stack tecnológico
 
-**Next.js App Router** es el marco central. Permite combinar en un mismo proyecto:
+El stack real es **Next.js App Router (frontend) + Convex (backend de datos y orquestación) + Clerk (auth)**. La división de responsabilidades:
 
-- **Route Handlers como proxy server-side**: todas las llamadas a APIs externas (Amadeus, Travelpayouts, Viator, Booking.com) pasan por Route Handlers para mantener las API keys fuera del cliente. Esto es especialmente relevante porque el token de Travelpayouts (el `marker`) y las credenciales de Amadeus no deben exponerse en el navegador.
-- **ISR (Incremental Static Regeneration)**: ideal para páginas de deals y landings SEO, porque permite servir contenido estático actualizable sin rebuild completo. Esto encaja perfectamente con la naturaleza de los datos de sourcing: los precios de Amadeus Inspiration y Travelpayouts Data API son cacheados por definición (no en vivo), así que regenerar páginas cada N horas es el modelo correcto, no fingir real-time.
-- **Server Functions con validación de auth/origen**: para cualquier mutación futura (guardar deals, suscribirse a alertas), Next.js recomienda validar auth y origen dentro de cada Server Function.
+- **Convex como cache y motor de ingesta**: las llamadas a APIs externas (Travelpayouts Data API, Viator, Booking.com) viven en **Convex actions** server-side, así las credenciales nunca tocan el navegador. Importante: el `marker` de Travelpayouts (id público de afiliado, va en `NEXT_PUBLIC_TP_MARKER`) y el **API token** (secreto, en `convex env`) son cosas distintas; solo el token da acceso a los datos. Una **action programada (cron de Convex)** refresca el feed cada N horas; cada búsqueda de usuario también persiste su resultado (read-through cache).
+- **Convex como almacén de la "oportunidad curada"**: los deals enriquecidos viven en tablas Convex (`deals`, `observations`, `destinations`), no en páginas estáticas. Esto es lo que habilita el query por vibe, el `deal_score` y guardar/alertas, queries que la API de tercero no puede responder sobre sus datos crudos.
+- **Frescura, no real-time**: los precios de Travelpayouts Data API son cacheados por definición (no en vivo). El cron de Convex que regenera el cache cada N horas es el modelo correcto, no fingir tiempo real. Solo se cachea la capa de inspiración; las APIs en vivo o transaccionales (Booking Demand, Duffel) no se cachean por ToS.
+- **Mutaciones con auth**: guardar deals, proyectos de viaje y alertas son mutations de Convex que validan identidad (Clerk) o el token de invitado (`pp_guest`).
+
+> Nota de drift: una versión anterior de este doc asumía Next.js + ISR para servir páginas estáticas regeneradas. El producto construido derivó a un SPA Convex + Clerk; el cache y la regeneración periódica ahora viven en Convex (tablas + cron actions), no en ISR. Ver el ADR en el README.
 
 ---
 
@@ -28,13 +31,12 @@ La interfaz principal no es una caja de búsqueda vacía, sino un **feed vivo**.
 
 ### 1. Sourcing
 
-La capa de ingestión trae destinos y precios desde dos fuentes complementarias:
+La capa de ingestión trae destinos y precios desde **Travelpayouts**, la única fuente de inspiración de vuelos con acceso hoy:
 
-- **Amadeus Flight Inspiration Search** (`shopping.flightDestinations`): recibe un origen IATA (ej. MEX) y devuelve destinos ordenados por precio, filtrable por fecha de salida, precio máximo, duración del viaje, one-way o non-stop. Usa datos cacheados actualizados diariamente. Cuota gratuita mensual en producción (1,000 a 10,000 llamadas según API), pago por excedente (aprox. US$0.0008 a US$0.024 por llamada).
-- **Amadeus Flight Cheapest Date Search** (`shopping.flightDates`): dado origen y destino, devuelve las fechas más baratas con precios. Complementa Inspiration para construir el calendario de flexibilidad.
-- **Travelpayouts Data API** (Aviasales): endpoints como `v2/prices/latest` devuelven los tickets más baratos hallados en las últimas 48 horas. La propia documentación recomienda este API para generar páginas estáticas. Límite de 100 req/min por marker. Los links ya incluyen el `marker` del afiliado, así que cada clic monetiza directamente.
+- **Travelpayouts Data API** (Aviasales) — **fuente principal y única**: `v2/prices/latest?origin=MEX` devuelve los destinos/tickets más baratos vistos desde un origen ("a dónde"); `v2/prices/month-matrix` da el calendario de precios ("cuándo"). Datos cacheados (hasta 7 días), recomendados por la propia doc para generar páginas estáticas. Límite de 100 req/min por marker. Los links ya incluyen el `marker` del afiliado, así que cada clic monetiza directamente.
+- ⚠️ **~~Amadeus Flight Inspiration / Cheapest Date Search~~ — DESCONTINUADO (2026-06-21):** Amadeus retiró su API pública Self-Service; hoy solo ofrece enterprise bajo contrato. Era la fuente complementaria de discovery; **ya no es viable**. Todo el sourcing se hace sobre Travelpayouts.
 
-Limitación importante: Amadeus Self-Service no incluye aerolíneas low-cost, American Airlines, Delta ni British Airways. Travelpayouts cubre ese universo pero el Search API en tiempo real exige 50,000 MAU confirmados, umbral que no se tiene al inicio. La combinación Amadeus Inspiration + Travelpayouts Data API cubre el discovery inicial sin ese requisito.
+Limitación importante: el Search API en tiempo real de Travelpayouts/Kiwi exige 50,000 MAU confirmados, umbral que no se tiene al inicio; por eso se usa el **Data API cacheado** para el discovery. Riesgo a registrar: con Amadeus fuera, el sistema queda **dependiente de una sola fuente** (ver [[riesgos-y-preguntas-abiertas]]).
 
 Para los detalles de acceso, umbrales y costos de cada proveedor, ver [[proveedores-apis-e-inventario]].
 
@@ -84,7 +86,7 @@ Cada deal vive como una entidad con los siguientes campos:
 | `return_window` | Rango de fechas de regreso (si aplica) |
 | `observed_price` | Precio observado en la fuente |
 | `currency` | Moneda del precio |
-| `source` | Amadeus / Aviasales / etc. |
+| `source` | Travelpayouts / Aviasales / etc. |
 | `observed_at` | Timestamp de la observación |
 | `freshness_hours` | Horas desde la última verificación |
 | `deal_score` | Score calculado por la capa de scoring |
@@ -99,7 +101,7 @@ Cada deal vive como una entidad con los siguientes campos:
 
 ## Honestidad de frescura
 
-Tanto Amadeus como Travelpayouts son explícitos en que los precios de sus capas de inspiración son cacheados, no en vivo. CruiseSheet, como referente de la vertical de cruceros, también advierte que los precios cambian rápido y el checkout final puede diferir.
+Travelpayouts es explícito en que los precios de su capa de inspiración son cacheados, no en vivo. CruiseSheet, como referente de la vertical de cruceros, también advierte que los precios cambian rápido y el checkout final puede diferir.
 
 La UX debe abrazar esta realidad en vez de ocultarla. Los textos de la interfaz usan patrones como:
 

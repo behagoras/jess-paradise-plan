@@ -1,6 +1,7 @@
 import { action, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { toMxn } from "./fx";
 
 /**
  * Travelpayouts data layer - real flight + hotel + cheapest-destination data.
@@ -303,6 +304,24 @@ function toFlightOffer(
   };
 }
 
+/**
+ * Ensure a FlightOffer is priced in MXN. We request MXN natively, but if TP
+ * returned a non-MXN price we CONVERT it with a real cached rate (never omit a
+ * mismatched price). If the FX rate is unavailable we keep the original amount
+ * + currency, labelled honestly - we never fabricate a rate.
+ */
+async function flightToMxn(
+  ctx: { runQuery: any; runMutation: any },
+  offer: FlightOffer
+): Promise<FlightOffer> {
+  if ((offer.currency || "").toUpperCase() === "MXN") {
+    return { ...offer, currency: "MXN" };
+  }
+  const converted = await toMxn(ctx, offer.price, offer.currency);
+  if (converted == null) return offer; // keep original, honest currency label
+  return { ...offer, price: converted, currency: "MXN" };
+}
+
 async function fetchFlightRows(
   params: URLSearchParams
 ): Promise<RawFlightRow[]> {
@@ -335,11 +354,11 @@ export const searchCheapestFlight = action({
     // YYYY-MM or YYYY-MM-DD; omit to let TP pick the cheapest upcoming date.
     departureAt: v.optional(v.string()),
     oneWay: v.optional(v.boolean()), // default false (round trip)
-    currency: v.optional(v.string()), // default "usd"
+    currency: v.optional(v.string()), // default "mxn"
   },
   handler: async (ctx, { origin, destination, departureAt, oneWay, currency }) => {
     const token = getToken();
-    const cur = currency ?? "usd";
+    const cur = currency ?? "mxn";
     const rt = oneWay ? false : true; // round trip by default
     const key = `flight:${origin}:${destination ?? "ANY"}:${
       departureAt ?? "ANY"
@@ -372,7 +391,7 @@ export const searchCheapestFlight = action({
           getAirlineNames(ctx),
           getCityInfo(ctx),
         ]);
-        return toFlightOffer(top, cur, airlineNames, cityInfo);
+        return flightToMxn(ctx, toFlightOffer(top, cur, airlineNames, cityInfo));
       }
     );
   },
@@ -393,11 +412,11 @@ export const searchCheapestDestinations = action({
     // When set, the feed is constrained to that departure month (the wizard's
     // "When" chip). Part of the cache key so months don't collide.
     departureAt: v.optional(v.string()),
-    currency: v.optional(v.string()), // default "usd"
+    currency: v.optional(v.string()), // default "mxn"
   },
   handler: async (ctx, { origin, limit, departureAt, currency }) => {
     const token = getToken();
-    const cur = currency ?? "usd";
+    const cur = currency ?? "mxn";
     const n = Math.max(1, Math.min(limit ?? 6, 30));
     const key = `dests:${origin}:${n}:${departureAt ?? "ANY"}:${cur}`;
 
@@ -427,7 +446,10 @@ export const searchCheapestDestinations = action({
           getAirlineNames(ctx),
           getCityInfo(ctx),
         ]);
-        return rows.map((r) => toFlightOffer(r, cur, airlineNames, cityInfo));
+        const mapped = rows.map((r) =>
+          toFlightOffer(r, cur, airlineNames, cityInfo)
+        );
+        return Promise.all(mapped.map((o) => flightToMxn(ctx, o)));
       }
     );
   },

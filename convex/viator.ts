@@ -1,6 +1,7 @@
 import { action, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { toMxn } from "./fx";
 
 /**
  * Viator data layer - REAL activities (experiences) for a destination.
@@ -287,6 +288,24 @@ function toActivityOffer(p: RawProduct, currency: string): ActivityOffer | null 
   };
 }
 
+/**
+ * Ensure an ActivityOffer is priced in MXN. We request MXN natively, but if
+ * Viator quoted another currency we CONVERT with a real cached rate (never omit
+ * a mismatched price). If FX is unavailable we keep the original amount +
+ * currency, labelled honestly - we never fabricate a rate.
+ */
+async function activityToMxn(
+  ctx: { runQuery: any; runMutation: any },
+  offer: ActivityOffer
+): Promise<ActivityOffer> {
+  if ((offer.currency || "").toUpperCase() === "MXN") {
+    return { ...offer, currency: "MXN" };
+  }
+  const converted = await toMxn(ctx, offer.priceFrom, offer.currency);
+  if (converted == null) return offer; // keep original, honest currency label
+  return { ...offer, priceFrom: converted, currency: "MXN" };
+}
+
 // ---------------------------------------------------------------------------
 // Public action - top REAL activity for the SELECTED destination
 // ---------------------------------------------------------------------------
@@ -304,14 +323,14 @@ export const searchActivity = action({
     countryCode: v.optional(v.string()), // ISO-2, e.g. "MX" (disambiguation)
     lat: v.optional(v.number()), // reserved; not required for taxonomy match
     lon: v.optional(v.number()),
-    currency: v.optional(v.string()), // default "USD"
+    currency: v.optional(v.string()), // default "MXN"
   },
   handler: async (
     ctx,
     { destinationName, countryCode, currency }
   ): Promise<ActivityOffer | null> => {
     const key = getKey();
-    const cur = (currency ?? "USD").toUpperCase();
+    const cur = (currency ?? "MXN").toUpperCase();
 
     const destId = await resolveDestinationId(
       ctx,
@@ -359,7 +378,7 @@ export const searchActivity = action({
 
         for (const p of resp.products ?? []) {
           const offer = toActivityOffer(p, cur);
-          if (offer) return offer; // first product with all required real fields
+          if (offer) return activityToMxn(ctx, offer); // first fully-real product
         }
         return null; // real empty result → cacheable
       }

@@ -42,7 +42,7 @@ Periodo de tiempo durante el cual una conversion se atribuye al afiliado que gen
 ## D
 
 **Datos cacheados**
-Precios e inventario almacenados en cache a partir de busquedas y reservas pasadas, actualizados periodicamente (Amadeus: diariamente; Travelpayouts: hasta 7 dias). No son precios en vivo. Los endpoints de inspiracion de Amadeus (Flight Inspiration Search, Flight Cheapest Date Search) y la Data API de Travelpayouts devuelven datos cacheados; son utiles para discovery y paginas editoriales, pero requieren confirmacion en vivo antes de cualquier compra. Ver [[proveedores-apis-e-inventario]] y [[arquitectura-mvp]].
+Precios e inventario almacenados en cache a partir de busquedas y reservas pasadas, actualizados periodicamente (Travelpayouts: hasta 7 dias). No son precios en vivo. La Data API de Travelpayouts (`v2/prices/latest`, `v2/prices/month-matrix`) devuelve datos cacheados; son utiles para discovery y paginas editoriales, pero requieren confirmacion en vivo antes de cualquier compra. (Los endpoints de inspiracion de Amadeus cumplian el mismo rol con actualizacion diaria, pero quedaron descontinuados en jun 2026.) Ver [[proveedores-apis-e-inventario]] y [[arquitectura-mvp]].
 
 **Deal quality score**
 Puntuacion editorial que combina precio absoluto, rareza relativa, tipo de vuelo (non-stop vs escalas), duracion posible de la escapada y criterios aspiracionales para determinar si una oportunidad merece ser destacada. Es una capa de scoring propia del producto, no un estandar de la industria. Ver [[arquitectura-mvp]].

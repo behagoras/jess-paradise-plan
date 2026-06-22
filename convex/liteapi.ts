@@ -1,6 +1,7 @@
 import { action, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { toMxn } from "./fx";
 
 /**
  * LiteAPI data layer - REAL hotel rates for a destination.
@@ -225,14 +226,14 @@ export const searchHotelLite = action({
     checkIn: v.string(), // YYYY-MM-DD
     checkOut: v.string(), // YYYY-MM-DD
     adults: v.optional(v.number()), // default 2
-    currency: v.optional(v.string()), // default "USD"
+    currency: v.optional(v.string()), // default "MXN"
   },
   handler: async (
     ctx,
     { city, countryCode, lat, lon, iataCode, checkIn, checkOut, adults, currency }
   ): Promise<HotelLiteOffer | null> => {
     const key = getKey();
-    const cur = (currency ?? "USD").toUpperCase();
+    const cur = (currency ?? "MXN").toUpperCase();
     const pax = adults ?? 2;
 
     // A stable place token for the cache key + the location body.
@@ -326,11 +327,27 @@ export const searchHotelLite = action({
         if (stat === FETCH_ERROR) return FETCH_ERROR;
         if (!stat) return null;
 
+        // Ensure MXN. We request MXN natively, but if LiteAPI quoted another
+        // currency we CONVERT with a real cached rate (never omit a mismatched
+        // price). If FX is unavailable we keep the original amount + currency,
+        // labelled honestly - we never fabricate a rate.
+        let priceFrom = bestPrice;
+        let currencyOut = bestCurrency;
+        if (bestCurrency.toUpperCase() !== "MXN") {
+          const converted = await toMxn(ctx, bestPrice, bestCurrency);
+          if (converted != null) {
+            priceFrom = converted;
+            currencyOut = "MXN";
+          }
+        } else {
+          currencyOut = "MXN";
+        }
+
         const offer: HotelLiteOffer = {
           hotelName: stat.name,
-          priceFrom: bestPrice,
+          priceFrom,
           stars: stat.stars,
-          currency: bestCurrency,
+          currency: currencyOut,
         };
         return offer;
       }

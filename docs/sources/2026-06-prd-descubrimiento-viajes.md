@@ -71,7 +71,7 @@ Los mejores deals de flexibilidad NO salen de una API pública. Vacations To Go 
 **Fase afiliado (inicio):** monetización por comisión de afiliado, sin tomar pagos ni reservar dentro del sitio. Cero riesgo operativo, cero acreditación, cero atención al cliente.
 
 Fuentes de comisión por vertical:
-- **Vuelos / vuelo+hotel:** Travelpayouts, Booking afiliado, Amadeus self-service (tarifas públicas).
+- **Vuelos / vuelo+hotel:** Travelpayouts (Data API + afiliado), Booking afiliado. (Amadeus self-service quedó descontinuado en jun 2026; solo enterprise bajo contrato.)
 - **Experiencias / actividades:** GetYourGuide afiliado, Viator (red Tripadvisor), Klook, Tiqets.
 - **Cruceros:** programa de afiliados de naviera o agregador / operadora mexicana (deals públicos + comisión).
 

@@ -1,5 +1,17 @@
 # Cómo conectar APIs de vuelos y experiencias para un agregador de viajes premium (afiliado → reservas propias) desde México
 
+> ⚠️ **CORRECCIÓN 2026-06-21 — léase antes que el cuerpo.** Este documento es una
+> investigación fechada. Desde entonces, **Amadeus retiró su API pública
+> "Self-Service for Developers"**; hoy Amadeus solo ofrece su API
+> **business/enterprise** (contrato comercial, normalmente volumen/acreditación).
+> Por tanto, **todo lo que este documento presenta como "Amadeus Self-Service
+> accesible / gratis / recomendado #2" YA NO APLICA.** La única fuente de
+> inspiración de vuelos accesible hoy es **Travelpayouts Data API**
+> (`v2/prices/latest`, `v2/prices/month-matrix`), que asume el rol que tenía
+> Amadeus Inspiration. Donde el cuerpo diga "Amadeus Inspiration + Cheapest
+> Date", léase "Travelpayouts Data API". Ver [[proveedores-apis-e-inventario]] y
+> [[riesgos-y-preguntas-abiertas]].
+
 ## TL;DR
 - **Empieza en modo afiliado con dos altas inmediatas y gratuitas: Travelpayouts (vuelos vía Aviasales/Kiwi + hoteles + experiencias) y Amadeus Self-Service (para datos de inspiración de vuelos "a cualquier lugar / fechas flexibles / precio tope").** Ninguna requiere acreditación IATA, ninguna cobra por darte de alta, y ambas aceptan a personas de México. El resto (Skyscanner, Booking Demand API, GetYourGuide/Viator API plena) exige tráfico mínimo que aún no tienes.
 - **Para el patrón "destino abierto + fechas flexibles + precio tope" la solución técnica real es Amadeus Flight Inspiration Search + Flight Cheapest Date Search (datos cacheados), complementado con el Data API de Travelpayouts; Skyscanner "Browse/Indicative" es superior pero está cerrado hasta que tengas >100k visitas/mes.** Estos endpoints devuelven datos cacheados, no en vivo: sirven para inspirar y generar páginas, no para confirmar precio final. Ojo: Duffel NO sirve para esta función por su regla look-to-book de 1500:1.

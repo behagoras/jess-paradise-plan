@@ -54,7 +54,7 @@ No todos los verticales pagan igual. La economía unitaria real ordena las prior
 
 ### Proveedores de afiliación por vertical
 
-- **Vuelos y hoteles:** Travelpayouts (una sola alta gratuita da acceso a Aviasales, Jetradar, Kiwi via links, Booking, Hotellook y más). Amadeus Self-Service para el motor de inspiración (Flight Inspiration Search, Flight Cheapest Date Search).
+- **Vuelos y hoteles:** Travelpayouts (una sola alta gratuita da acceso a Aviasales, Jetradar, Kiwi via links, Booking, Hotellook y más). Su **Data API** (`v2/prices/latest`, `v2/prices/month-matrix`) es el motor de inspiración. (Amadeus Self-Service cumplía antes ese rol, pero quedó **descontinuado** en jun 2026; solo enterprise bajo contrato.)
 - **Experiencias:** Viator directo (alta en menos de 1 minuto vía cuenta Tripadvisor), GetYourGuide (vía CJ Affiliate o directo), Klook (vía Travelpayouts o portal propio), Tiqets (vía Awin).
 - **Cruceros:** programas de navieras (Royal Caribbean ~4%, cookie ~45 días), GoToSea (3% o más), Expedia CruiseShipCenters (hasta 12%).
 
@@ -87,7 +87,7 @@ La ruta de migración cuando llegue el momento:
 
 El acceso a ciertas APIs escala con el tráfico. Estos son los benchmarks relevantes:
 
-- **Sin mínimo / inmediato:** Travelpayouts, Viator, Klook, Royal Caribbean afiliado, Amadeus Self-Service.
+- **Sin mínimo / inmediato:** Travelpayouts, Viator, Klook, Royal Caribbean afiliado. (Amadeus Self-Service estaba aquí; quedó descontinuado en jun 2026.)
 - **50,000 MAU:** Kiwi Tequila API (vía Travelpayouts).
 - **100,000 visitas/mes:** Skyscanner Travel API, GetYourGuide API básica.
 - **1,000,000 visitas/mes + 300 reservas/mes:** GetYourGuide Booking API completa.

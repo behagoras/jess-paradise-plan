@@ -227,9 +227,9 @@ function MoreFilters({ planner }: { planner: PlannerApi }) {
             </span>
           </div>
           <Slider
-            min={400}
-            max={6000}
-            step={100}
+            min={8000}
+            max={120000}
+            step={1000}
             value={[state.budget]}
             onValueChange={(v) =>
               setState((s) => ({ ...s, budget: v[0] ?? s.budget }))
@@ -237,8 +237,8 @@ function MoreFilters({ planner }: { planner: PlannerApi }) {
             className="py-2.5"
           />
           <div className="mb-[26px] mt-1 flex justify-between text-xs font-semibold text-ink-soft">
-            <span>$400</span>
-            <span>$6,000+</span>
+            <span>{fmt(8000)}</span>
+            <span>{fmt(120000)}+</span>
           </div>
 
           <div className="mb-[11px] flex items-center justify-between">

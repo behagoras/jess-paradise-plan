@@ -122,7 +122,7 @@ Este orden minimiza costo hundido y preserva el enfoque en el diferencial del pr
 ## Enlaces relacionados
 
 - [[modelo-de-negocio]] porque la elección de ruta de acreditación determina cuándo y cómo se captura margen propio versus comisión de afiliado.
-- [[proveedores-apis-e-inventario]] porque Duffel, Amadeus Self-Service y los consolidadores son los proveedores técnicos que hacen posibles las reservas propias.
+- [[proveedores-apis-e-inventario]] porque Duffel y los consolidadores son los proveedores técnicos que hacen posibles las reservas propias. (Amadeus Self-Service quedó descontinuado en jun 2026; solo enterprise bajo contrato.)
 - [[verticales-y-economia-unitaria]] porque la priorización de cruceros, experiencias y vuelos afecta directamente qué acreditaciones importan y en qué orden.
 - [[legal-y-fiscal-mexico]] porque la transición de afiliado a merchant activa el RNT, CFDI, IVA y otras obligaciones.
 - [[roadmap]] porque la secuencia afiliado → Duffel → host/consolidador → IATA propia es la ruta de maduración del negocio.

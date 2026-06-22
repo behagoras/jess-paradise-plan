@@ -77,7 +77,7 @@ const INITIAL: PlannerState = {
   departure: "Mexico City",
   when: "Flexible",
   travelers: 2,
-  budget: 1800,
+  budget: 25000,
   packages: ["Flight", "Hotel", "Activity"],
   vacation: ["Friends", "Adventure"],
   travelerTypes: ["Adult"],
@@ -267,6 +267,7 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
         origin,
         limit: MAX_RESULTS,
         departureAt,
+        currency: "mxn",
       });
       setState((s) => ({ ...s, genPhase: 1 }));
 
@@ -424,12 +425,14 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
               checkIn: win.checkIn,
               checkOut: win.checkOut,
               adults,
+              currency: "mxn",
             }).catch(() => null)
           : Promise.resolve(null),
         includeActivity && city
           ? searchActivity({
               destinationName: city,
               countryCode: countryCode ?? undefined,
+              currency: "mxn",
             }).catch(() => null)
           : Promise.resolve(null),
       ]);
@@ -518,7 +521,7 @@ export function usePlanner(scrollRef?: React.RefObject<HTMLDivElement | null>) {
             }
           : null,
       travelers: state.travelers,
-      currency: offer?.flight.currency ?? "usd",
+      currency: offer?.flight.currency ?? "mxn",
     });
 
     return {

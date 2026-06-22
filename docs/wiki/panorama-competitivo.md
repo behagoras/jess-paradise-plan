@@ -38,7 +38,7 @@ Vacations To Go y CruiseSheet son instructivos precisamente porque revelan la na
 
 La secuencia lógica para cruceros es: afiliación o lead-gen primero, luego acuerdo con host agency o wholesaler, y solo después una experiencia transaccional propia. Entrar por cruceros en el primer corte sería elegir la vertical con mayor barrera de entrada técnica y menor posibilidad de validar rápido. Ver [[acreditacion-y-host-agencies]] para la capa de credenciales que ese camino requiere.
 
-La alternativa en vuelos es estructuralmente más accesible: Amadeus Self-Service permite prototipar de inmediato, Travelpayouts/Aviasales ofrece un Data API con precios de caché abierto a partners registrados, y Duffel permite vender vuelos reales sin acreditación IATA/ARC propia desde el día uno. Ver [[proveedores-apis-e-inventario]] para el detalle técnico de cada opción.
+La alternativa en vuelos es estructuralmente más accesible: Travelpayouts/Aviasales ofrece un Data API con precios de caché abierto a partners registrados (la fuente accesible hoy, tras la baja del Self-Service de Amadeus), y Duffel permite vender vuelos reales sin acreditación IATA/ARC propia desde el día uno. Ver [[proveedores-apis-e-inventario]] para el detalle técnico de cada opción.
 
 ## El hueco competitivo real
 

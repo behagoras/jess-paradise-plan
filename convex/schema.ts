@@ -79,6 +79,20 @@ export default defineSchema({
     fetchedAt: v.number(),
   }).index("by_key", ["key"]),
 
+  // --- FX rate cache (currency conversion to MXN) ------------------------
+  // We request MXN natively from every provider, but if a provider returns a
+  // non-MXN price we convert it with a REAL exchange rate from a free, no-key
+  // source (open.er-api.com), cached here with a ~24h TTL (rates barely move
+  // intraday). Keyed by base currency, e.g. "USD". `rates` is the raw
+  // { CODE -> rate-per-1-base } map the source returned. We NEVER fabricate a
+  // rate: if the fetch fails we keep the original amount + currency and label
+  // it honestly rather than invent a conversion.
+  tpFxCache: defineTable({
+    key: v.string(), // base currency code, e.g. "USD"
+    rates: v.any(), // Record<string, number> (CODE -> units per 1 base)
+    fetchedAt: v.number(), // Date.now() at fetch
+  }).index("by_key", ["key"]),
+
   // --- Destination index (vibe/geo enrichment) ---------------------------
   // A scalable, lazily-built index keyed by destination IATA. It lets the
   // reverse search rank ARBITRARY real destinations (not just the 6 curated

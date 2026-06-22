@@ -1,5 +1,14 @@
 # Investigación profunda para tu idea de negocio de lujo accesible por flexibilidad
 
+> ⚠️ **CORRECCIÓN 2026-06-21 — léase antes que el cuerpo.** Investigación fechada.
+> Desde entonces **Amadeus retiró su API pública Self-Service**; hoy solo ofrece
+> enterprise bajo contrato. Donde el cuerpo recomiende "Amadeus Self-Service /
+> Flight Inspiration Search" como fuente accesible, **ya no aplica**: la única
+> fuente de inspiración de vuelos accesible hoy es **Travelpayouts Data API**.
+> La arquitectura de 4 capas y la tesis "discovery primero, booking después"
+> siguen vigentes; solo cambia la fuente de sourcing (Travelpayouts en vez de
+> Amadeus). Ver [[proveedores-apis-e-inventario]] y [[riesgos-y-preguntas-abiertas]].
+
 ## Resumen ejecutivo
 
 La idea **sí tiene una tesis comercial real**, pero no exactamente en la forma más obvia. El mercado sí muestra tres señales favorables: el crecimiento del segmento de “lujo aspiracional”, la importancia creciente de las experiencias dentro del gasto turístico y la aceleración sostenida de la reserva digital en travel. Al mismo tiempo, la investigación deja claro que tu cuello de botella no es la UX ni la narrativa: es el **acceso al inventario utilizable y monetizable**. En vuelos, hay fuentes abiertas o relativamente accesibles para discovery; en hoteles y actividades, hay programas de afiliación bastante maduros; en cruceros, en cambio, la capa de monetización y booking profesional sigue estando muy ligada a membresías, credenciales de industria y/o host agencies. citeturn20view1turn20view0turn20view4turn23view0turn23view2

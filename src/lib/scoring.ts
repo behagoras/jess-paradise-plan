@@ -37,8 +37,8 @@ export const TRIP_LENGTHS: { label: string; min: number; max: number }[] = [
 
 /**
  * Budget tolerance: a destination's seed base may exceed the per-person budget
- * by up to this factor and still surface (so a $400 budget tolerates ~$520).
- * Keeps the 6-destination catalog from going empty on tight budgets.
+ * by up to this factor and still surface (so a $25,000 MXN budget tolerates
+ * ~$32,500 MXN). Keeps the candidate feed from going empty on tight budgets.
  */
 export const BUDGET_TOLERANCE = 1.3;
 

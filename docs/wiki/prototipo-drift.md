@@ -94,7 +94,7 @@ Los filtros por vibe/presupuesto/días en acción, superpuestos sobre el feed.
 | Constraint | Razón |
 |---|---|
 | CTA finales son "Ver oferta" / "Reservar en [proveedor]", no checkout | Modelo afiliado, sin reservas propias por ahora |
-| Precios como "desde" con nota de confirmación en proveedor | Datos cacheados de inspiración (Amadeus, Travelpayouts); precio final se confirma en sitio del proveedor |
+| Precios como "desde" con nota de confirmación en proveedor | Datos cacheados de inspiración (Travelpayouts Data API; Amadeus quedó descontinuado); precio final se confirma en sitio del proveedor |
 | Sin `localStorage` ni `sessionStorage` | No funcionan en artifacts de Claude |
 | Copy en español, sin em dashes | El fundador los considera marca de texto generado por IA |
 | Sin llamadas de red reales | Datos hardcodeados para autonomía del artifact |

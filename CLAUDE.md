@@ -1,0 +1,2 @@
+- You have access to a graphify vault, use it for navigating the code and the docs
+- Always try to update the graphify graph if you do updates

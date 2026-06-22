@@ -1,5 +1,11 @@
 # Cómo entrar a competir con una OTA hoy sin volverte una agencia tradicional
 
+> ⚠️ **CORRECCIÓN 2026-06-21.** Donde el cuerpo describe **"Amadeus Self-Service"**
+> como ruta "clásica moderna" accesible para newcomers, **ya no aplica**: Amadeus
+> retiró esa API pública; hoy solo ofrece enterprise bajo contrato. Las
+> menciones a Amadeus **enterprise / GDS / consolidador aéreo** siguen siendo
+> correctas (esa capa sigue existiendo). Ver [[proveedores-apis-e-inventario]].
+
 ## Tesis central
 
 La manera más realista de competir hoy con una OTA no es empezar como “otro Expedia” con inventario propio y servicio completo, sino como una **capa de descubrimiento y curaduría** apoyada en inventario de terceros. Las OTAs grandes monetizan principalmente por dos vías: en el modelo **merchant** cobran al viajero y luego liquidan al proveedor; en el modelo **agency** solo intermedian la reserva y reciben comisión o fee del proveedor. Expedia describe ambos modelos en sus reportes financieros y, además, su negocio para agentes y socios se apoya en acceso a inventario, comisiones y herramientas de gestión, no en inventario propio. citeturn29search2turn29search7turn30search7
